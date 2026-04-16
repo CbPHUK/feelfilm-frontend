@@ -297,13 +297,12 @@ export function FeedPage() {
             FeelFilm — {lang === 'ru' ? 'эмоциональный поиск' : 'emotional discovery'}
           </p>
           <h1 style={{
-            fontSize: 'clamp(42px, 7.5vw, 120px)',
+            fontSize: 'clamp(32px, 7.5vw, 120px)',
             fontWeight: 900,
             letterSpacing: '-0.04em',
             lineHeight: 0.92,
             color: 'var(--text)',
             marginBottom: 'clamp(20px, 3vw, 40px)',
-            whiteSpace: 'nowrap',
           }}>
             {lang === 'ru' ? 'Не оценки. Ощущения.' : 'Not ratings. Feelings.'}
           </h1>
