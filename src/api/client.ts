@@ -1,27 +1,36 @@
 const BASE = (import.meta.env.VITE_API_URL ?? '') + '/api'
 
+function getToken(): string | null {
+  return localStorage.getItem('ff_token')
+}
+
 function getInitData(): string {
   return window.Telegram?.WebApp?.initData || 'dev'
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = getToken()
   const headers: Record<string, string> = {
-    'X-Telegram-Init-Data': getInitData(),
-    'X-Display-Name': encodeURIComponent(localStorage.getItem('ff_display_name') ?? 'Аноним'),
     ...(options.headers as Record<string, string>),
   }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  } else {
+    // Fallback: Telegram initData (для Mini App без JWT)
+    headers['X-Telegram-Init-Data'] = getInitData()
+    headers['X-Display-Name'] = encodeURIComponent(localStorage.getItem('ff_display_name') ?? 'Аноним')
+  }
+
   if (options.body) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers,
-  })
+  const res = await fetch(`${BASE}${path}`, { ...options, headers })
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-    throw new Error(err.error ?? `HTTP ${res.status}`)
+    throw Object.assign(new Error(err.error ?? `HTTP ${res.status}`), err)
   }
 
   if (res.status === 204) return undefined as T
@@ -29,7 +38,33 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  auth: () => request<{ id: number; firstName: string }>('/auth', { method: 'POST' }),
+  auth: {
+    register: (data: { email: string; password: string; firstName: string }) =>
+      request<{ pending: boolean }>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+
+    verifyEmail: (data: { email: string; code: string }) =>
+      request<{ token: string; user: { id: number; firstName: string; email: string } }>(
+        '/auth/verify-email', { method: 'POST', body: JSON.stringify(data) }
+      ),
+
+    login: (data: { email: string; password: string }) =>
+      request<{ token: string; user: { id: number; firstName: string; email: string } }>(
+        '/auth/login', { method: 'POST', body: JSON.stringify(data) }
+      ),
+
+    resendCode: (email: string) =>
+      request<{ pending: boolean }>('/auth/resend-code', { method: 'POST', body: JSON.stringify({ email }) }),
+
+    telegram: () =>
+      request<{ token: string; user: { id: number; firstName: string } }>(
+        '/auth/telegram', { method: 'POST' }
+      ),
+
+    telegramWidget: (data: Record<string, unknown>) =>
+      request<{ token: string; user: { id: number; firstName: string } }>(
+        '/auth/telegram-widget', { method: 'POST', body: JSON.stringify(data) }
+      ),
+  },
 
   films: {
     search: (q: string, type: 'all' | 'movie' | 'series' | 'anime' | 'book' = 'all') =>
@@ -45,7 +80,6 @@ export const api = {
 
   reviews: {
     create: (data: {
-      userId: number
       filmId: number
       moodBefore: string[]
       effectAfter: string[]

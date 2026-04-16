@@ -183,7 +183,7 @@ export function AddReviewPage() {
     setSubmitting(true)
     try {
       await api.reviews.create({
-        userId: user.id, filmId,
+        filmId,
         moodBefore, effectAfter, atmosphere,
         viewerType: viewerType ?? undefined,
         personalNote: personalNote || undefined,

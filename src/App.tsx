@@ -6,7 +6,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import { useTheme } from './contexts/ThemeContext'
 import { NavBar } from './components/NavBar'
 import { Logo } from './components/Logo'
-import { Onboarding } from './components/Onboarding'
+import { AuthPage } from './pages/AuthPage'
 import { FeedPage } from './pages/FeedPage'
 import { SearchPage } from './pages/SearchPage'
 import { FilmPage } from './pages/FilmPage'
@@ -200,23 +200,21 @@ function Footer() {
 }
 
 function AppInner() {
-  const [showOnboarding, setShowOnboarding] = useState(
-    !localStorage.getItem('ff_onboarded')
-  )
+  const [authed, setAuthed] = useState(!!localStorage.getItem('ff_token'))
 
   useEffect(() => {
     window.Telegram?.WebApp?.ready()
     window.Telegram?.WebApp?.expand()
   }, [])
 
-  const handleOnboardingDone = (name: string) => {
+  const handleAuthDone = (firstName: string) => {
     localStorage.setItem('ff_onboarded', '1')
-    localStorage.setItem('ff_display_name', name)
-    setShowOnboarding(false)
+    localStorage.setItem('ff_display_name', firstName)
+    setAuthed(true)
   }
 
-  if (showOnboarding) {
-    return <Onboarding onDone={handleOnboardingDone} />
+  if (!authed) {
+    return <AuthPage onDone={handleAuthDone} />
   }
 
   return (
