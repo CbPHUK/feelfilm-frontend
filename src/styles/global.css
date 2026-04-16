@@ -1,0 +1,671 @@
+/* ─── Светлая тема (default) ─── */
+:root,
+[data-theme="light"] {
+  --bg:              #EAE4DA;
+  --bg-deep:         #DDD6CB;
+
+  --coral:           #D0706A;
+  --coral-light:     rgba(208, 112, 106, 0.15);
+  --coral-muted:     rgba(208, 112, 106, 0.11);
+
+  --teal:            #6B9DAA;
+  --teal-light:      rgba(107, 157, 170, 0.15);
+  --teal-muted:      rgba(107, 157, 170, 0.11);
+
+  --text:            #38302A;
+  --text-secondary:  #6B5E54;
+  --text-hint:       #A09184;
+
+  /* Усиленное стекло */
+  --glass-bg:        rgba(255, 252, 248, 0.52);
+  --glass-bg-heavy:  rgba(255, 252, 248, 0.86);
+  --glass-border:    rgba(255, 255, 255, 0.70);
+  --glass-hi:        rgba(255, 255, 255, 0.90);  /* highlight верхней грани */
+  --glass-shadow:    0 8px 40px rgba(60, 40, 30, 0.12), inset 0 1px 0 rgba(255,255,255,0.80);
+  --glass-shadow-sm: 0 2px 16px rgba(60, 40, 30, 0.08), inset 0 1px 0 rgba(255,255,255,0.70);
+
+  --header-bg:       rgba(234, 228, 218, 0.78);
+
+  --r-sm:   8px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+  --r-pill: 999px;
+
+  /* Блобы — светлая тема */
+  --blob-opacity: 0.55;
+}
+
+/* ─── Тёмная тема ─── */
+[data-theme="dark"] {
+  --bg:              #1A1614;
+  --bg-deep:         #141210;
+
+  --coral:           #D4706A;
+  --coral-light:     rgba(212, 112, 106, 0.20);
+  --coral-muted:     rgba(212, 112, 106, 0.14);
+
+  --teal:            #6B9DAA;
+  --teal-light:      rgba(107, 157, 170, 0.20);
+  --teal-muted:      rgba(107, 157, 170, 0.14);
+
+  --text:            #EDE8DF;
+  --text-secondary:  #A8998A;
+  --text-hint:       #6A5E52;
+
+  --glass-bg:        rgba(40, 34, 28, 0.68);
+  --glass-bg-heavy:  rgba(30, 25, 20, 0.92);
+  --glass-border:    rgba(255, 255, 255, 0.09);
+  --glass-hi:        rgba(255, 255, 255, 0.06);
+  --glass-shadow:    0 8px 40px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.07);
+  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  --header-bg:       rgba(26, 22, 18, 0.80);
+
+  --blob-opacity: 0.28;
+}
+
+/* ─── Reset ─── */
+* {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root { min-height: 100vh; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Фоновые блобы ─── */
+.bg-blobs {
+  position: fixed; inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: var(--blob-opacity);
+  will-change: transform;
+}
+.blob-1 {
+  width: 700px; height: 600px;
+  background: radial-gradient(circle, rgba(208,112,106,1) 0%, rgba(208,112,106,0) 70%);
+  top: -180px; left: -180px;
+  animation: blob1 22s ease-in-out infinite;
+}
+.blob-2 {
+  width: 600px; height: 700px;
+  background: radial-gradient(circle, rgba(107,157,170,1) 0%, rgba(107,157,170,0) 70%);
+  bottom: -200px; right: -150px;
+  animation: blob2 28s ease-in-out infinite;
+}
+.blob-3 {
+  width: 440px; height: 440px;
+  background: radial-gradient(circle, rgba(155,126,200,1) 0%, rgba(155,126,200,0) 70%);
+  top: 45%; left: 45%;
+  transform: translate(-50%, -50%);
+  animation: blob3 19s ease-in-out infinite;
+}
+
+@keyframes blob1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30%       { transform: translate(80px, 70px) scale(1.08); }
+  60%       { transform: translate(-50px, 100px) scale(0.94); }
+}
+@keyframes blob2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  35%       { transform: translate(-90px, -80px) scale(1.06); }
+  70%       { transform: translate(60px, -50px) scale(1.10); }
+}
+@keyframes blob3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%       { transform: translate(-50%, -50%) scale(1.18); }
+}
+
+/* ─── Анимированное зерно плёнки ─── */
+@keyframes grain-shift {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-3%, -8%); }
+  20%  { transform: translate(-10%, 4%); }
+  30%  { transform: translate(6%, -18%); }
+  40%  { transform: translate(14%, 7%); }
+  50%  { transform: translate(-4%, 15%); }
+  60%  { transform: translate(12%, 3%); }
+  70%  { transform: translate(0, 8%); }
+  80%  { transform: translate(2%, 28%); }
+  90%  { transform: translate(-8%, 7%); }
+  100% { transform: translate(0, 0); }
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.80' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Контент поверх блобов */
+#root { position: relative; z-index: 1; }
+
+/* light-leak убраны — mix-blend-mode: screen на fixed элементах убивал GPU */
+.light-leak { display: none; }
+
+/* ─── Пунктирные горизонтальные линии (японский стиль) ─── */
+.jp-lines {
+  position: fixed; inset: 0;
+  z-index: 9994;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 79px,
+    rgba(0,0,0,0.04) 79px,
+    rgba(0,0,0,0.04) 80px
+  );
+}
+[data-theme="dark"] .jp-lines {
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 79px,
+    rgba(255,255,255,0.025) 79px,
+    rgba(255,255,255,0.025) 80px
+  );
+}
+
+/* Вертикальные редкие линии */
+.jp-lines::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 119px,
+    rgba(0,0,0,0.03) 119px,
+    rgba(0,0,0,0.03) 120px
+  );
+}
+[data-theme="dark"] .jp-lines::after {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 119px,
+    rgba(255,255,255,0.018) 119px,
+    rgba(255,255,255,0.018) 120px
+  );
+}
+
+/* ─── Fluid typography ─── */
+:root {
+  --text-display:  clamp(32px, 5vw, 64px);
+  --text-title:    clamp(20px, 2.5vw, 32px);
+  --text-body:     clamp(13px, 1.2vw, 15px);
+  --space-section: clamp(24px, 4vw, 56px);
+  --space-card:    clamp(12px, 1.5vw, 20px);
+}
+
+/* ─── Desktop layout ─── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  display: none;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ограничение ширины контента */
+.content-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+@media (min-width: 769px) {
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid var(--glass-border);
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(32px) saturate(1.4);
+    -webkit-backdrop-filter: blur(32px) saturate(1.4);
+    padding: 32px 20px 24px;
+    gap: 2px;
+    overflow-y: auto;
+    box-shadow: inset -1px 0 0 var(--glass-hi);
+  }
+
+  .navbar-mobile { display: none !important; }
+
+  .film-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 0;
+    row-gap: 0;
+  }
+
+  .film-grid > * {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+  }
+}
+
+
+/* ─── Dot-паттерн для акцентных секций ─── */
+.dot-bg {
+  background-image: radial-gradient(circle, var(--text-hint) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.14;
+}
+
+/* ─── Японский акцент: красная черта слева ─── */
+.jp-accent {
+  position: relative;
+  padding-left: 16px;
+}
+.jp-accent::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--coral);
+  border-radius: 1px;
+}
+
+/* ─── Scan-lines (эффект экрана/плёнки) ─── */
+.scan-lines {
+  position: fixed; inset: 0;
+  z-index: 9993;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.012) 2px,
+    rgba(0,0,0,0.012) 4px
+  );
+}
+[data-theme="dark"] .scan-lines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.025) 2px,
+    rgba(0,0,0,0.025) 4px
+  );
+}
+
+/* ─── Анимации страниц ─── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-enter {
+  animation: pageIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.page-fade {
+  animation: pageFadeIn 0.24s ease forwards;
+}
+
+/* ─── Toast ─── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Skeleton shimmer ─── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--glass-bg) 25%,
+    var(--glass-border) 50%,
+    var(--glass-bg) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Pull-to-refresh ─── */
+.ptr-indicator {
+  display: flex; align-items: center; justify-content: center;
+  height: 0; overflow: hidden;
+  color: var(--coral); font-size: 20px;
+  transition: height 0.2s ease;
+}
+.ptr-indicator.ptr-active { height: 48px; }
+
+/* ─── Единый easing для всего сайта ─── */
+:root { --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+/* ─── Карточки ─── */
+.hover-card {
+  transition: transform 0.2s var(--ease-out),
+              box-shadow 0.2s var(--ease-out) !important;
+  cursor: pointer;
+}
+.hover-card:hover  { transform: translateY(-3px) !important; }
+.hover-card:active { transform: scale(0.98) !important; }
+
+.card-glow-coral:hover  { box-shadow: 0 12px 36px rgba(208,112,106,0.28), inset 0 1px 0 var(--glass-hi) !important; }
+.card-glow-teal:hover   { box-shadow: 0 12px 36px rgba(107,157,170,0.28), inset 0 1px 0 var(--glass-hi) !important; }
+.card-glow-purple:hover { box-shadow: 0 12px 36px rgba(155,126,200,0.28), inset 0 1px 0 var(--glass-hi) !important; }
+
+/* ─── Кнопки ─── */
+.hover-btn {
+  transition: transform 0.18s var(--ease-out),
+              box-shadow 0.18s var(--ease-out),
+              filter 0.18s var(--ease-out) !important;
+}
+.hover-btn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.06) !important;
+  box-shadow: 0 8px 24px rgba(208,112,106,0.30) !important;
+}
+.hover-btn:active:not(:disabled) {
+  transform: scale(0.97) !important;
+  filter: brightness(0.97) !important;
+}
+
+/* ─── Чипы ─── */
+.hover-chip {
+  transition: transform 0.15s var(--ease-out),
+              background 0.15s ease,
+              box-shadow 0.15s var(--ease-out) !important;
+}
+.hover-chip:hover  { transform: scale(1.04) !important; }
+.hover-chip:active { transform: scale(0.96) !important; }
+
+/* ─── Теги ─── */
+.hover-tag {
+  transition: transform 0.15s var(--ease-out), filter 0.15s ease !important;
+}
+.hover-tag:hover:not(:disabled)  { transform: scale(1.05) !important; filter: brightness(1.06) !important; }
+.hover-tag:active:not(:disabled) { transform: scale(0.95) !important; }
+
+/* ─── Строки поиска ─── */
+.hover-row {
+  transition: background 0.15s ease, transform 0.15s var(--ease-out) !important;
+}
+.hover-row:hover  { background: var(--glass-bg-heavy) !important; transform: translateX(3px) !important; }
+.hover-row:active { transform: translateX(1px) !important; }
+
+/* ─── Навбар — только цвет, без прыжков ─── */
+.hover-nav {
+  transition: opacity 0.15s ease !important;
+}
+.hover-nav:hover  { opacity: 0.75 !important; }
+.hover-nav:active { opacity: 0.5 !important; }
+
+/* ─── Текстовые кнопки ─── */
+.hover-text-btn {
+  transition: opacity 0.15s ease !important;
+}
+.hover-text-btn:hover  { opacity: 0.7 !important; }
+.hover-text-btn:active { opacity: 0.5 !important; }
+
+::-webkit-scrollbar { width: 0; }
+button, input, textarea { font-family: inherit; }
+
+/* ─── Marquee / бегущая строка ─── */
+/* ─── Floating bubbles ─── */
+@keyframes float-a {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translateY(-2px); }
+  50%       { transform: translateY(6px); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes float-d {
+  0%, 100% { transform: translateY(3px); }
+  50%       { transform: translateY(-5px); }
+}
+.bubble-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-hint);
+  white-space: nowrap;
+  will-change: transform;
+  cursor: default;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.bubble-tag:hover {
+  background: var(--coral-muted);
+  color: var(--coral);
+  border-color: var(--coral);
+}
+
+/* ─── Marquee / бегущая строка ─── */
+.marquee-track {
+  overflow: hidden;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 12px 0;
+  background: var(--glass-bg);
+  user-select: none;
+  pointer-events: none;
+}
+.marquee-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: max-content;
+  white-space: nowrap;
+  animation: marquee 28s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+.marquee-inner:hover { animation-play-state: paused; }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-hint);
+  white-space: nowrap;
+}
+.marquee-dot {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--coral);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* ─── Book card tooltip ─── */
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ─── Staggered reveal ─── */
+@keyframes revealUp {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.reveal-item {
+  opacity: 0;
+  animation: revealUp 0.2s ease forwards;
+}
+
+/* ─── Stat chip ─── */
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  box-shadow: var(--glass-shadow-sm);
+}
+
+/* ─── Onboarding ─── */
+@keyframes tagFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--tag-rot, 0deg)); }
+  50%       { transform: translateY(-9px) rotate(var(--tag-rot, 0deg)); }
+}
+
+@media (min-width: 769px) {
+  .onboarding-right { display: flex !important; }
+}
+
+/* ─── Pulse (книжные скелетоны) ─── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+/* ─── Премиум: hover на sidebar-пунктах ─── */
+.app-sidebar button:hover { background: rgba(208,112,106,0.07) !important; }
+
+/* ─── Японская сетка + виньетка ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  z-index: 9996;
+  pointer-events: none;
+
+  /* Точечная сетка (方眼紙 стиль) */
+  background-image:
+    radial-gradient(ellipse at 50% 0%,   transparent 65%, rgba(0,0,0,0.13) 100%),
+    radial-gradient(ellipse at 50% 100%, transparent 65%, rgba(0,0,0,0.10) 100%),
+    radial-gradient(circle, rgba(0,0,0,0.25) 0.5px, transparent 0.5px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    28px 28px;
+  background-position:
+    0 0,
+    0 0,
+    0 0;
+  opacity: 1;
+}
+
+/* Темная тема: точки светлее */
+[data-theme="dark"] body::before {
+  background-image:
+    radial-gradient(ellipse at 50% 0%,   transparent 65%, rgba(0,0,0,0.25) 100%),
+    radial-gradient(ellipse at 50% 100%, transparent 65%, rgba(0,0,0,0.20) 100%),
+    radial-gradient(circle, rgba(255,255,255,0.07) 0.5px, transparent 0.5px);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
+}
+
+/* ─── Блобы — оптимизированные ─── */
+.blob { filter: blur(60px); }
+.blob-1 {
+  width: 600px; height: 500px;
+  background: radial-gradient(circle, rgba(208,112,106,0.7) 0%, rgba(208,112,106,0) 65%);
+  top: -180px; left: -180px;
+}
+.blob-2 {
+  width: 500px; height: 600px;
+  background: radial-gradient(circle, rgba(107,157,170,0.65) 0%, rgba(107,157,170,0) 65%);
+  bottom: -200px; right: -150px;
+}
+.blob-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(155,126,200,0.55) 0%, rgba(155,126,200,0) 65%);
+  top: 45%; left: 45%;
+  transform: translate(-50%, -50%);
+}
+
+/* ─── Hover-chip — убираем резкий outline ─── */
+.hover-chip { outline-offset: -1px; }
+
+/* ─── FilmCard: тонкий gradient-shine при hover ─── */
+.hover-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.2s;
+  pointer-events: none;
+}
+.hover-card:hover::after { opacity: 1; }
+.hover-card { position: relative; }
+
+/* ─── Плавная загрузка картинок ─── */
+.img-fade {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.img-fade.loaded {
+  opacity: 1;
+}
+
+/* ─── Улучшенные scrollbar ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+/* ─── Book card hover (CSS-only) ─── */
+.book-card-wrap {
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.book-card-wrap:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+}
+.book-card-wrap:active {
+  transform: scale(0.98);
+}
