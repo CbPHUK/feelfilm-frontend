@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Logo } from './Logo'
 import { useLang } from '../contexts/LangContext'
-import { useNavigate } from 'react-router-dom'
 
 interface OnboardingProps {
-  onDone: (name: string) => void
+  onSignIn: () => void
+  onGuest: () => void
 }
 
 const BEFORE_TAGS = [
@@ -48,17 +48,20 @@ const SLIDE_DATA = [
     accent: 'эмоцию.',
     sub: 'Кто-то сейчас чувствует то же, что ты. Твой честный отзыв может помочь.',
   },
+  {
+    label: '04',
+    bigText: 'Кино. Аниме.',
+    accent: 'Книги.',
+    sub: 'Фильмы, сериалы, аниме и книги — всё в одном месте. Ищи по ощущению, не по жанру.',
+  },
 ]
 
-export function Onboarding({ onDone }: OnboardingProps) {
+export function Onboarding({ onSignIn, onGuest }: OnboardingProps) {
   const { t } = useLang()
-  const navigate = useNavigate()
   const [slide, setSlide] = useState(0)
-  const [name, setName] = useState('')
-  const [agreed, setAgreed] = useState(false)
   const [animDir, setAnimDir] = useState<'in' | 'out'>('in')
 
-  const isNameSlide = slide === SLIDE_DATA.length
+  const isAuthSlide = slide === SLIDE_DATA.length
   const isLast = slide === SLIDE_DATA.length - 1
   const current = SLIDE_DATA[slide]
 
@@ -68,7 +71,6 @@ export function Onboarding({ onDone }: OnboardingProps) {
   }
 
   const handleNext = () => go(isLast ? SLIDE_DATA.length : slide + 1)
-  const handleStart = () => onDone(name.trim() || t.anon)
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg)', overflow: 'hidden' }}>
@@ -96,13 +98,13 @@ export function Onboarding({ onDone }: OnboardingProps) {
           transform: animDir === 'out' ? 'translateY(12px)' : 'translateY(0)',
           transition: 'opacity 0.2s ease, transform 0.2s ease',
         }}>
-          {!isNameSlide ? (
+          {!isAuthSlide ? (
             <>
               <p style={{
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.2em',
                 textTransform: 'uppercase', color: 'var(--coral)', marginBottom: 24,
               }}>
-                {current.label} / 03
+                {current.label} / 04
               </p>
               <h2 style={{
                 fontSize: 'clamp(44px, 6vw, 72px)',
@@ -115,7 +117,6 @@ export function Onboarding({ onDone }: OnboardingProps) {
                 fontSize: 'clamp(44px, 6vw, 72px)',
                 fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 0.95,
                 color: 'var(--coral)', marginBottom: 'clamp(20px, 4vh, 36px)',
-                WebkitTextStroke: '0px',
               }}>
                 {current.accent}
               </h2>
@@ -128,127 +129,107 @@ export function Onboarding({ onDone }: OnboardingProps) {
             </>
           ) : (
             <>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--teal)', marginBottom: 24 }}>
-                Последний шаг
-              </p>
-              <h2 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 0.95, color: 'var(--text)', marginBottom: 8 }}>
-                {t.yourName}
-              </h2>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 28, lineHeight: 1.5 }}>
-                {t.nameHint}
-              </p>
-              <div style={{
-                borderRadius: 'var(--r-md)', overflow: 'hidden',
-                background: 'var(--glass-bg)',
-                backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                border: '1.5px solid var(--glass-border)',
-                boxShadow: 'var(--glass-shadow-sm)',
+              <p style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.2em',
+                textTransform: 'uppercase', color: 'var(--teal)', marginBottom: 24,
               }}>
-                <input
-                  type="text" value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleStart()}
-                  placeholder={t.namePlaceholder}
-                  autoFocus
+                Готово
+              </p>
+              <h2 style={{
+                fontSize: 'clamp(36px, 5vw, 52px)',
+                fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 0.95,
+                color: 'var(--text)', marginBottom: 8,
+              }}>
+                Начнём?
+              </h2>
+              <p style={{
+                fontSize: 14, color: 'var(--text-secondary)',
+                marginBottom: 28, lineHeight: 1.6, maxWidth: '34ch',
+              }}>
+                С аккаунтом ты сможешь добавлять отзывы, ставить лайки и сохранять историю.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button
+                  onClick={onSignIn}
+                  className="hover-btn"
                   style={{
-                    width: '100%', padding: '16px 18px',
-                    background: 'transparent', border: 'none', outline: 'none',
-                    fontSize: 18, color: 'var(--text)', fontFamily: 'inherit',
+                    width: '100%', padding: '15px', borderRadius: 'var(--r-lg)', border: 'none',
+                    background: 'var(--coral)', color: '#fff', fontSize: 15, fontWeight: 700,
+                    cursor: 'pointer', boxShadow: '0 6px 28px rgba(208,112,106,0.35)',
+                    letterSpacing: '0.01em', transition: 'all 0.2s',
                   }}
-                />
+                >
+                  Войти / Зарегистрироваться
+                </button>
+                <button
+                  onClick={onGuest}
+                  className="hover-text-btn"
+                  style={{
+                    width: '100%', padding: '12px', background: 'none', border: 'none',
+                    color: 'var(--text-hint)', fontSize: 13, cursor: 'pointer',
+                  }}
+                >
+                  Смотреть без регистрации →
+                </button>
               </div>
             </>
           )}
         </div>
 
-        {/* Bottom — dots + buttons */}
-        <div>
-          {/* Progress dots */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+        {/* Bottom — dots + кнопки (только на слайдах, не на auth-экране) */}
+        {!isAuthSlide && (
+          <div>
+            {/* Progress dots */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+              {[...SLIDE_DATA, null].map((_, i) => (
+                <div key={i} style={{
+                  height: 3, borderRadius: 2,
+                  width: i === slide ? 28 : 8,
+                  background: i <= slide ? 'var(--coral)' : 'rgba(208,112,106,0.18)',
+                  transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+                }} />
+              ))}
+            </div>
+
+            <button onClick={handleNext} className="hover-btn" style={{
+              width: '100%', padding: '15px', borderRadius: 'var(--r-lg)', border: 'none',
+              background: 'var(--coral)', color: '#fff', fontSize: 15, fontWeight: 700,
+              cursor: 'pointer', boxShadow: '0 6px 28px rgba(208,112,106,0.35)', letterSpacing: '0.01em',
+            }}>
+              {t.next}
+            </button>
+            <button onClick={() => go(SLIDE_DATA.length)} className="hover-text-btn" style={{
+              width: '100%', padding: '12px', background: 'none', border: 'none',
+              color: 'var(--text-hint)', fontSize: 13, cursor: 'pointer', marginTop: 4,
+            }}>
+              {t.skip}
+            </button>
+          </div>
+        )}
+
+        {/* Dots на auth-экране */}
+        {isAuthSlide && (
+          <div style={{ display: 'flex', gap: 6 }}>
             {[...SLIDE_DATA, null].map((_, i) => (
               <div key={i} style={{
                 height: 3, borderRadius: 2,
                 width: i === slide ? 28 : 8,
-                background: i <= slide ? 'var(--coral)' : 'rgba(208,112,106,0.18)',
+                background: 'var(--coral)',
                 transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
               }} />
             ))}
           </div>
-
-          {!isNameSlide ? (
-            <>
-              <button onClick={handleNext} className="hover-btn" style={{
-                width: '100%', padding: '15px', borderRadius: 'var(--r-lg)', border: 'none',
-                background: 'var(--coral)', color: '#fff', fontSize: 15, fontWeight: 700,
-                cursor: 'pointer', boxShadow: '0 6px 28px rgba(208,112,106,0.35)', letterSpacing: '0.01em',
-              }}>
-                {t.next}
-              </button>
-              <button onClick={() => go(SLIDE_DATA.length)} className="hover-text-btn" style={{
-                width: '100%', padding: '12px', background: 'none', border: 'none',
-                color: 'var(--text-hint)', fontSize: 13, cursor: 'pointer', marginTop: 4,
-              }}>
-                {t.skip}
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Согласие с политикой */}
-              <label style={{
-                display: 'flex', alignItems: 'flex-start', gap: 10,
-                marginBottom: 14, cursor: 'pointer',
-              }}>
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  style={{ marginTop: 2, accentColor: 'var(--coral)', flexShrink: 0 }}
-                />
-                <span style={{ fontSize: 12, color: 'var(--text-hint)', lineHeight: 1.5 }}>
-                  Я принимаю{' '}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); navigate('/privacy') }}
-                    style={{
-                      background: 'none', border: 'none', padding: 0,
-                      color: 'var(--coral)', fontSize: 12, cursor: 'pointer',
-                      textDecoration: 'underline', fontFamily: 'inherit',
-                    }}
-                  >
-                    политику конфиденциальности
-                  </button>
-                  {' '}и даю согласие на обработку персональных данных в соответствии с&nbsp;152-ФЗ
-                </span>
-              </label>
-
-              <button
-                onClick={handleStart}
-                disabled={!agreed}
-                className="hover-btn"
-                style={{
-                  width: '100%', padding: '15px', borderRadius: 'var(--r-lg)', border: 'none',
-                  background: agreed ? 'var(--coral)' : 'rgba(208,112,106,0.2)',
-                  color: agreed ? '#fff' : 'var(--text-hint)',
-                  fontSize: 15, fontWeight: 700,
-                  cursor: agreed ? 'pointer' : 'default',
-                  boxShadow: agreed ? '0 6px 28px rgba(208,112,106,0.35)' : 'none',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {t.start}
-              </button>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {/* ── Right panel — декоративный, десктоп ── */}
       <div style={{
         flex: 1, position: 'relative', overflow: 'hidden',
-        display: 'none',  // показывается через CSS @media
+        display: 'none',
       }} className="onboarding-right">
 
-        {/* Разделитель с надписями */}
+        {/* Разделитель */}
         <div style={{
           position: 'absolute', left: '50%', top: 0, bottom: 0,
           width: 1, background: 'var(--glass-border)',
@@ -274,7 +255,7 @@ export function Onboarding({ onDone }: OnboardingProps) {
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(107,157,170,0.5)' }}>после</span>
         </div>
 
-        {/* Теги ДО — левая половина */}
+        {/* Теги ДО */}
         {BEFORE_TAGS.map((tag) => (
           <div key={tag.text} style={{
             position: 'absolute',
@@ -293,7 +274,7 @@ export function Onboarding({ onDone }: OnboardingProps) {
           </div>
         ))}
 
-        {/* Теги ПОСЛЕ — правая половина */}
+        {/* Теги ПОСЛЕ */}
         {AFTER_TAGS.map((tag) => (
           <div key={tag.text} style={{
             position: 'absolute',
