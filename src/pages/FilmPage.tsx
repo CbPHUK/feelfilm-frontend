@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import { useUser } from '../hooks/useUser'
 import { useLang, fmtReviews } from '../contexts/LangContext'
 import { useToast } from '../contexts/ToastContext'
+import { useAuthModal } from '../contexts/AuthModalContext'
 import { VIEWER_TYPE_SYMBOL } from '../constants/viewerTypes'
 import type { Film, Review, ReactionEmoji } from '../types'
 
@@ -37,9 +38,11 @@ function ReactionBar({ review, onUpdate }: {
 }) {
   const [loading, setLoading] = useState<ReactionEmoji | null>(null)
   const { user } = useUser()
+  const { openAuthModal } = useAuthModal()
 
   const toggle = async (emoji: ReactionEmoji) => {
-    if (!user || loading) return
+    if (!user) { openAuthModal(); return }
+    if (loading) return
     setLoading(emoji)
     try {
       const isActive = review.myReaction === emoji
@@ -60,13 +63,12 @@ function ReactionBar({ review, onUpdate }: {
           <button
             key={emoji}
             onClick={(e) => { e.stopPropagation(); toggle(emoji) }}
-            disabled={!user}
             style={{
               display: 'flex', alignItems: 'center', gap: 3,
               padding: '3px 8px', borderRadius: 'var(--r-pill)',
               border: active ? '1.5px solid rgba(208,112,106,0.5)' : '1px solid var(--glass-border)',
               background: active ? 'var(--coral-muted)' : 'rgba(255,255,255,0.04)',
-              cursor: user ? 'pointer' : 'default',
+              cursor: 'pointer',
               transition: 'all 0.12s',
             } as React.CSSProperties}
           >
@@ -92,9 +94,11 @@ function LikeBtn({ review, onUpdate }: {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const { lang } = useLang()
+  const { openAuthModal } = useAuthModal()
 
   const toggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!localStorage.getItem('ff_token')) { openAuthModal(); return }
     if (loading) return
     setLoading(true)
     try {
@@ -149,6 +153,7 @@ export function FilmPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const { user } = useUser()
+  const { openAuthModal } = useAuthModal()
   const navigate = useNavigate()
   const { t, lang } = useLang()
   const { toast } = useToast()
@@ -168,6 +173,7 @@ export function FilmPage() {
   const myReview = user ? reviews.find((r) => r.userId === user.id) : undefined
 
   const handleAddOrEdit = () => {
+    if (!user) { openAuthModal(); return }
     if (myReview) {
       sessionStorage.setItem('ff_edit_review', JSON.stringify({
         filmId: film!.id,
@@ -374,23 +380,21 @@ export function FilmPage() {
           )}
 
           {/* Кнопка добавить отзыв */}
-          {user && (
-            <button
-              onClick={handleAddOrEdit}
-              style={{
-                width: '100%', marginTop: 20, padding: '13px',
-                borderRadius: 'var(--r-md)',
-                border: `1.5px solid ${typeColor}55`,
-                background: `${typeColor}12`,
-                backdropFilter: 'blur(8px)',
-                color: typeColor,
-                fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                letterSpacing: '0.02em',
-              }}
-            >
-              {myReview ? t.editReview : t.shareEmotions}
-            </button>
-          )}
+          <button
+            onClick={handleAddOrEdit}
+            style={{
+              width: '100%', marginTop: 20, padding: '13px',
+              borderRadius: 'var(--r-md)',
+              border: `1.5px solid ${typeColor}55`,
+              background: `${typeColor}12`,
+              backdropFilter: 'blur(8px)',
+              color: typeColor,
+              fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {myReview ? t.editReview : t.shareEmotions}
+          </button>
         </div>
       </div>
 

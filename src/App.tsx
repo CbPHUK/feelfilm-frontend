@@ -3,10 +3,12 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LangProvider, useLang } from './contexts/LangContext'
 import { ToastProvider } from './contexts/ToastContext'
+import { AuthModalContext } from './contexts/AuthModalContext'
 import { useTheme } from './contexts/ThemeContext'
 import { NavBar } from './components/NavBar'
 import { Logo } from './components/Logo'
 import { AuthPage } from './pages/AuthPage'
+import { WelcomePage } from './pages/WelcomePage'
 import { FeedPage } from './pages/FeedPage'
 import { SearchPage } from './pages/SearchPage'
 import { FilmPage } from './pages/FilmPage'
@@ -14,6 +16,7 @@ import { AddReviewPage } from './pages/AddReviewPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { BooksPage } from './pages/BooksPage'
 import { PrivacyPage } from './pages/PrivacyPage'
+import { api } from './api/client'
 
 function SidebarSettings() {
   const { theme, toggle } = useTheme()
@@ -199,46 +202,117 @@ function Footer() {
   )
 }
 
+type AppScreen = 'welcome' | 'auth' | 'main'
+
 function AppInner() {
-  const [authed, setAuthed] = useState(!!localStorage.getItem('ff_token'))
+  const [screen, setScreen] = useState<AppScreen>(() => {
+    if (
+      localStorage.getItem('ff_token') ||
+      localStorage.getItem('ff_visited') ||
+      localStorage.getItem('ff_onboarded')
+    ) return 'main'
+    return 'welcome'
+  })
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
     window.Telegram?.WebApp?.ready()
     window.Telegram?.WebApp?.expand()
+
+    // Авто-вход для Telegram Mini App
+    const initData = window.Telegram?.WebApp?.initData
+    if (initData && !localStorage.getItem('ff_token')) {
+      api.auth.telegram()
+        .then((res) => {
+          localStorage.setItem('ff_token', res.token)
+          localStorage.setItem('ff_display_name', res.user.firstName)
+          localStorage.setItem('ff_visited', '1')
+          setScreen('main')
+        })
+        .catch(() => {})
+    }
   }, [])
 
   const handleAuthDone = (firstName: string) => {
-    localStorage.setItem('ff_onboarded', '1')
     localStorage.setItem('ff_display_name', firstName)
-    setAuthed(true)
+    localStorage.setItem('ff_visited', '1')
+    setScreen('main')
+    setShowAuthModal(false)
   }
 
-  if (!authed) {
+  if (screen === 'welcome') {
+    return (
+      <WelcomePage
+        onSignIn={() => setScreen('auth')}
+        onGuest={() => {
+          localStorage.setItem('ff_visited', '1')
+          setScreen('main')
+        }}
+      />
+    )
+  }
+
+  if (screen === 'auth') {
     return <AuthPage onDone={handleAuthDone} />
   }
 
   return (
-    <>
-      <ScrollToTop />
-      <BgBlobs />
-      <div className="app-layout">
-        <Sidebar />
-        <div className="app-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <div style={{ flex: 1 }}>
-            <Routes>
-              <Route path="/"         element={<><FeedPage /><NavBar /></>} />
-              <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
-              <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
-              <Route path="/film/:id" element={<FilmPage />} />
-              <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
-              <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
-              <Route path="/privacy"  element={<PrivacyPage />} />
-            </Routes>
+    <AuthModalContext.Provider value={{ openAuthModal: () => setShowAuthModal(true) }}>
+      <>
+        <ScrollToTop />
+        <BgBlobs />
+        <div className="app-layout">
+          <Sidebar />
+          <div className="app-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <div style={{ flex: 1 }}>
+              <Routes>
+                <Route path="/"         element={<><FeedPage /><NavBar /></>} />
+                <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
+                <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
+                <Route path="/film/:id" element={<FilmPage />} />
+                <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
+                <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
+                <Route path="/privacy"  element={<PrivacyPage />} />
+              </Routes>
+            </div>
+            <Footer />
           </div>
-          <Footer />
         </div>
-      </div>
-    </>
+
+        {/* Модал авторизации */}
+        {showAuthModal && (
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.75)',
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '20px',
+            }}
+            onClick={() => setShowAuthModal(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 420, position: 'relative' }}
+            >
+              <button
+                onClick={() => setShowAuthModal(false)}
+                style={{
+                  position: 'absolute', top: -14, right: -14, zIndex: 10,
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: 'var(--glass-bg-heavy)',
+                  border: '1px solid var(--glass-border)',
+                  color: 'var(--text-secondary)', fontSize: 20,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  lineHeight: 1, fontWeight: 300,
+                }}
+              >×</button>
+              <AuthPage onDone={handleAuthDone} modal />
+            </div>
+          </div>
+        )}
+      </>
+    </AuthModalContext.Provider>
   )
 }
 

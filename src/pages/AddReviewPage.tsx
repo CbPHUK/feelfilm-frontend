@@ -5,6 +5,7 @@ import { TagPicker } from '../components/TagPicker'
 import { useUser } from '../hooks/useUser'
 import { useLang } from '../contexts/LangContext'
 import { useToast } from '../contexts/ToastContext'
+import { useAuthModal } from '../contexts/AuthModalContext'
 import { MOOD_BEFORE_TAGS, EFFECT_AFTER_TAGS, ATMOSPHERE_TAGS } from '../constants/emotions'
 import { VIEWER_TYPES } from '../constants/viewerTypes'
 import type { Film } from '../types'
@@ -46,6 +47,7 @@ export function AddReviewPage() {
   const { user, loading: userLoading } = useUser()
   const { t, lang } = useLang()
   const { toast } = useToast()
+  const { openAuthModal } = useAuthModal()
 
   // Предзаполнение если редактируем существующий отзыв
   const filmIdParam = searchParams.get('filmId') ? parseInt(searchParams.get('filmId')!) : null
@@ -176,7 +178,7 @@ export function AddReviewPage() {
       return
     }
     if (!user) {
-      setSubmitError(t.authError)
+      openAuthModal()
       return
     }
 

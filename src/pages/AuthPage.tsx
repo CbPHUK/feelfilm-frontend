@@ -4,6 +4,7 @@ import { api } from '../api/client'
 
 interface AuthPageProps {
   onDone: (firstName: string) => void
+  modal?: boolean
 }
 
 type Screen = 'choose' | 'login' | 'register' | 'verify'
@@ -116,7 +117,7 @@ function TelegramWidget({ onSuccess }: { onSuccess: (firstName: string) => void 
   return <div ref={ref} style={{ display: 'flex', justifyContent: 'center' }} />
 }
 
-export function AuthPage({ onDone }: AuthPageProps) {
+export function AuthPage({ onDone, modal }: AuthPageProps) {
   const [screen, setScreen] = useState<Screen>('choose')
   const [method, setMethod] = useState<Method>('email')
   const [email, setEmail] = useState('')
@@ -206,13 +207,145 @@ export function AuthPage({ onDone }: AuthPageProps) {
     }
   }
 
+  const spinner = (
+    <div style={{ padding: '60px 0', textAlign: 'center' }}>
+      <span style={{ fontSize: 32, color: 'var(--coral)', animation: 'spin 0.8s linear infinite', display: 'inline-block' }}>◌</span>
+    </div>
+  )
+
   if (loading && !error) {
+    if (modal) return spinner
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-        <span style={{ fontSize: 32, color: 'var(--coral)', animation: 'spin 0.8s linear infinite', display: 'inline-block' }}>◌</span>
+        {spinner}
       </div>
     )
   }
+
+  const card = (
+    <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 400 }}>
+      {/* Лого */}
+      {!modal && (
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <Logo size={32} withText />
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
+            Эмоциональный поиск фильмов
+          </p>
+        </div>
+      )}
+
+      {/* Карточка */}
+      <div style={{
+        background: 'var(--glass-bg-heavy)',
+        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        borderRadius: 'var(--r-xl)',
+        border: '1px solid var(--glass-border)',
+        padding: '28px 24px',
+        boxShadow: 'var(--glass-shadow)',
+      }}>
+
+        {/* Выбор метода */}
+        {screen === 'choose' && (
+          <>
+            <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6, color: 'var(--text)' }}>Добро пожаловать</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>Выберите способ входа</p>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              {(['email', 'telegram'] as Method[]).map((m) => (
+                <button key={m} onClick={() => setMethod(m)} style={{
+                  flex: 1, padding: '10px', borderRadius: 'var(--r-md)',
+                  border: `1.5px solid ${method === m ? 'var(--coral)' : 'var(--glass-border)'}`,
+                  background: method === m ? 'var(--coral-muted)' : 'transparent',
+                  color: method === m ? 'var(--coral)' : 'var(--text-secondary)',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>
+                  {m === 'email' ? '✉ Email' : '✈ Telegram'}
+                </button>
+              ))}
+            </div>
+
+            {method === 'email' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Btn onClick={() => setScreen('login')}>Войти</Btn>
+                <Btn variant="secondary" onClick={() => setScreen('register')}>Создать аккаунт</Btn>
+              </div>
+            )}
+
+            {method === 'telegram' && (
+              <TelegramWidget onSuccess={onDone} />
+            )}
+          </>
+        )}
+
+        {/* Вход по email */}
+        {screen === 'login' && (
+          <>
+            <button onClick={() => setScreen('choose')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-hint)', fontSize: 12, marginBottom: 16, padding: 0 }}>← Назад</button>
+            <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 20, color: 'var(--text)' }}>Вход</h2>
+            <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoFocus />
+            <Input label="Пароль" type="password" value={password} onChange={setPassword} placeholder="••••••" />
+            {error && <p style={{ color: 'var(--coral)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+            <Btn onClick={handleLogin} loading={loading}>Войти</Btn>
+            <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-hint)', marginTop: 12 }}>
+              Нет аккаунта?{' '}
+              <button onClick={() => { setScreen('register'); setError('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--coral)', fontSize: 12, padding: 0 }}>
+                Зарегистрироваться
+              </button>
+            </p>
+          </>
+        )}
+
+        {/* Регистрация */}
+        {screen === 'register' && (
+          <>
+            <button onClick={() => setScreen('choose')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-hint)', fontSize: 12, marginBottom: 16, padding: 0 }}>← Назад</button>
+            <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 20, color: 'var(--text)' }}>Регистрация</h2>
+            <Input label="Имя" value={firstName} onChange={setFirstName} placeholder="Как вас зовут?" autoFocus />
+            <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
+            <Input label="Пароль" type="password" value={password} onChange={setPassword} placeholder="Минимум 6 символов" />
+            {error && <p style={{ color: 'var(--coral)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+            <Btn onClick={handleRegister} loading={loading}>Создать аккаунт</Btn>
+            <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-hint)', marginTop: 12 }}>
+              Уже есть аккаунт?{' '}
+              <button onClick={() => { setScreen('login'); setError('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--coral)', fontSize: 12, padding: 0 }}>
+                Войти
+              </button>
+            </p>
+          </>
+        )}
+
+        {/* Ввод кода */}
+        {screen === 'verify' && (
+          <>
+            <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 8, color: 'var(--text)' }}>Введите код</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
+              Отправили код на <strong>{email}</strong>
+            </p>
+            <Input label="Код подтверждения" value={code} onChange={setCode} placeholder="123456" autoFocus />
+            {error && <p style={{ color: 'var(--coral)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+            <Btn onClick={handleVerify} loading={loading}>Подтвердить</Btn>
+            <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-hint)', marginTop: 12 }}>
+              Не пришло?{' '}
+              <button
+                onClick={handleResend}
+                disabled={resendCooldown > 0}
+                style={{ background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer', color: resendCooldown > 0 ? 'var(--text-hint)' : 'var(--coral)', fontSize: 12, padding: 0 }}
+              >
+                {resendCooldown > 0 ? `Повторить через ${resendCooldown}с` : 'Отправить снова'}
+              </button>
+            </p>
+          </>
+        )}
+      </div>
+
+      <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-hint)', marginTop: 16 }}>
+        Регистрируясь, вы соглашаетесь с{' '}
+        <a href="/privacy" style={{ color: 'var(--text-hint)', textDecoration: 'underline' }}>политикой конфиденциальности</a>
+      </p>
+    </div>
+  )
+
+  if (modal) return card
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px' }}>
@@ -220,125 +353,7 @@ export function AuthPage({ onDone }: AuthPageProps) {
       <div className="bg-blobs" style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
         <div className="blob blob-1" /><div className="blob blob-2" /><div className="blob blob-3" />
       </div>
-
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 400 }}>
-        {/* Лого */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Logo size={32} withText />
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
-            Эмоциональный поиск фильмов
-          </p>
-        </div>
-
-        {/* Карточка */}
-        <div style={{
-          background: 'var(--glass-bg-heavy)',
-          backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-          borderRadius: 'var(--r-xl)',
-          border: '1px solid var(--glass-border)',
-          padding: '28px 24px',
-          boxShadow: 'var(--glass-shadow)',
-        }}>
-
-          {/* Выбор метода */}
-          {screen === 'choose' && (
-            <>
-              <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6, color: 'var(--text)' }}>Добро пожаловать</h2>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>Выберите способ входа</p>
-
-              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                {(['email', 'telegram'] as Method[]).map((m) => (
-                  <button key={m} onClick={() => setMethod(m)} style={{
-                    flex: 1, padding: '10px', borderRadius: 'var(--r-md)',
-                    border: `1.5px solid ${method === m ? 'var(--coral)' : 'var(--glass-border)'}`,
-                    background: method === m ? 'var(--coral-muted)' : 'transparent',
-                    color: method === m ? 'var(--coral)' : 'var(--text-secondary)',
-                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  }}>
-                    {m === 'email' ? '✉ Email' : '✈ Telegram'}
-                  </button>
-                ))}
-              </div>
-
-              {method === 'email' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Btn onClick={() => setScreen('login')}>Войти</Btn>
-                  <Btn variant="secondary" onClick={() => setScreen('register')}>Создать аккаунт</Btn>
-                </div>
-              )}
-
-              {method === 'telegram' && (
-                <TelegramWidget onSuccess={onDone} />
-              )}
-            </>
-          )}
-
-          {/* Вход по email */}
-          {screen === 'login' && (
-            <>
-              <button onClick={() => setScreen('choose')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-hint)', fontSize: 12, marginBottom: 16, padding: 0 }}>← Назад</button>
-              <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 20, color: 'var(--text)' }}>Вход</h2>
-              <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoFocus />
-              <Input label="Пароль" type="password" value={password} onChange={setPassword} placeholder="••••••" />
-              {error && <p style={{ color: 'var(--coral)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
-              <Btn onClick={handleLogin} loading={loading}>Войти</Btn>
-              <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-hint)', marginTop: 12 }}>
-                Нет аккаунта?{' '}
-                <button onClick={() => { setScreen('register'); setError('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--coral)', fontSize: 12, padding: 0 }}>
-                  Зарегистрироваться
-                </button>
-              </p>
-            </>
-          )}
-
-          {/* Регистрация */}
-          {screen === 'register' && (
-            <>
-              <button onClick={() => setScreen('choose')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-hint)', fontSize: 12, marginBottom: 16, padding: 0 }}>← Назад</button>
-              <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 20, color: 'var(--text)' }}>Регистрация</h2>
-              <Input label="Имя" value={firstName} onChange={setFirstName} placeholder="Как вас зовут?" autoFocus />
-              <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
-              <Input label="Пароль" type="password" value={password} onChange={setPassword} placeholder="Минимум 6 символов" />
-              {error && <p style={{ color: 'var(--coral)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
-              <Btn onClick={handleRegister} loading={loading}>Создать аккаунт</Btn>
-              <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-hint)', marginTop: 12 }}>
-                Уже есть аккаунт?{' '}
-                <button onClick={() => { setScreen('login'); setError('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--coral)', fontSize: 12, padding: 0 }}>
-                  Войти
-                </button>
-              </p>
-            </>
-          )}
-
-          {/* Ввод кода */}
-          {screen === 'verify' && (
-            <>
-              <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 8, color: 'var(--text)' }}>Введите код</h2>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-                Отправили код на <strong>{email}</strong>
-              </p>
-              <Input label="Код подтверждения" value={code} onChange={setCode} placeholder="123456" autoFocus />
-              {error && <p style={{ color: 'var(--coral)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
-              <Btn onClick={handleVerify} loading={loading}>Подтвердить</Btn>
-              <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-hint)', marginTop: 12 }}>
-                Не пришло?{' '}
-                <button
-                  onClick={handleResend}
-                  disabled={resendCooldown > 0}
-                  style={{ background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer', color: resendCooldown > 0 ? 'var(--text-hint)' : 'var(--coral)', fontSize: 12, padding: 0 }}
-                >
-                  {resendCooldown > 0 ? `Повторить через ${resendCooldown}с` : 'Отправить снова'}
-                </button>
-              </p>
-            </>
-          )}
-        </div>
-
-        <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-hint)', marginTop: 16 }}>
-          Регистрируясь, вы соглашаетесь с{' '}
-          <a href="/privacy" style={{ color: 'var(--text-hint)', textDecoration: 'underline' }}>политикой конфиденциальности</a>
-        </p>
-      </div>
+      {card}
     </div>
   )
 }
