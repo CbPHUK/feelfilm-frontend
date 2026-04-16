@@ -80,7 +80,7 @@ function TelegramWidget({ onSuccess }: { onSuccess: (firstName: string) => void 
     if (!BOT_USERNAME || !ref.current) return
 
     // Глобальный callback для Telegram Widget
-    ;(window as Record<string, unknown>).onTelegramAuth = async (user: Record<string, unknown>) => {
+    ;(window as unknown as Record<string, unknown>).onTelegramAuth = async (user: Record<string, unknown>) => {
       try {
         const res = await api.auth.telegramWidget(user)
         localStorage.setItem('ff_token', res.token)
