@@ -78,22 +78,25 @@ export function Onboarding({ onSignIn, onGuest }: OnboardingProps) {
       {/* ── Left panel ── */}
       <div style={{
         flex: '0 0 min(520px, 100%)',
+        height: '100vh',
         display: 'flex', flexDirection: 'column',
         padding: 'clamp(32px, 5vh, 56px) clamp(28px, 5vw, 64px)',
         position: 'relative', zIndex: 2,
         borderRight: '1px solid var(--glass-border)',
         background: 'var(--glass-bg-heavy)',
         backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)',
+        boxSizing: 'border-box',
       }}>
         {/* Logo */}
-        <div style={{ marginBottom: 'auto' }}>
+        <div style={{ flexShrink: 0 }}>
           <Logo size={28} withText />
         </div>
 
         {/* Content */}
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: 'clamp(24px, 4vh, 48px) 0',
+          padding: 'clamp(20px, 3vh, 40px) 0',
+          minHeight: 0, overflow: 'hidden',
           opacity: animDir === 'out' ? 0 : 1,
           transform: animDir === 'out' ? 'translateY(12px)' : 'translateY(0)',
           transition: 'opacity 0.2s ease, transform 0.2s ease',
@@ -179,7 +182,7 @@ export function Onboarding({ onSignIn, onGuest }: OnboardingProps) {
 
         {/* Bottom — dots + кнопки (только на слайдах, не на auth-экране) */}
         {!isAuthSlide && (
-          <div>
+          <div style={{ flexShrink: 0 }}>
             {/* Progress dots */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
               {[...SLIDE_DATA, null].map((_, i) => (
@@ -210,7 +213,7 @@ export function Onboarding({ onSignIn, onGuest }: OnboardingProps) {
 
         {/* Dots на auth-экране */}
         {isAuthSlide && (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             {[...SLIDE_DATA, null].map((_, i) => (
               <div key={i} style={{
                 height: 3, borderRadius: 2,
