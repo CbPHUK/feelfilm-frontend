@@ -140,35 +140,70 @@ function SideFilters({ typeFilter, onTypeChange, afterSel, onToggleAfter, total 
   )
 }
 
-// ── FilmOfTheDay ───────────────────────────────────────────────
-function FilmOfTheDay({ entry }: { entry?: Entry }) {
+// ── DayWidget (авто-слайдер: фильм/сериал/аниме/книга дня) ───────
+const SLIDE_TYPES = [
+  { value: 'movie',  label: 'фильм дня',  icon: '🎬' },
+  { value: 'series', label: 'сериал дня', icon: '📺' },
+  { value: 'anime',  label: 'аниме дня',  icon: '🎌' },
+  { value: 'book',   label: 'книга дня',  icon: '📚' },
+] as const
+
+function DayWidget({ featured }: { featured: Record<string, Entry> }) {
   const navigate = useNavigate()
-  const work = entry?.work
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setIdx(p => (p + 1) % SLIDE_TYPES.length), 5000)
+    return () => clearInterval(t)
+  }, [])
+
+  const slide = SLIDE_TYPES[idx]
+  const entry = featured[slide.value]
+  const work  = entry?.work
+
+  const titleLen = work?.title?.length ?? 0
+  const titleFs  = titleLen > 20 ? 26 : titleLen > 13 ? 34 : 42
 
   return (
-    <aside style={{
-      border: `1px solid ${T.ink}`,
-      display: 'grid', gridTemplateRows: 'auto 1fr auto',
-      overflow: 'hidden',
-    }}>
-      {/* header */}
+    <aside style={{ border: `1px solid ${T.ink}`, overflow: 'hidden' }}>
+
+      {/* type switcher */}
+      <div style={{ display: 'flex', borderBottom: `1px solid ${T.ink}` }}>
+        {SLIDE_TYPES.map((s, i) => (
+          <button
+            key={s.value}
+            onClick={() => setIdx(i)}
+            title={s.label}
+            style={{
+              flex: 1, padding: '8px 4px',
+              border: 'none',
+              borderRight: i < SLIDE_TYPES.length - 1 ? `1px solid ${T.ink}` : 'none',
+              background: i === idx ? T.ink : 'transparent',
+              color: i === idx ? T.paper : T.inkMute,
+              fontSize: 14, cursor: 'pointer',
+              transition: 'background 0.15s, color 0.15s',
+            }}
+          >{s.icon}</button>
+        ))}
+      </div>
+
+      {/* label + date */}
       <div style={{
         padding: '8px 12px', borderBottom: `1px solid ${T.ink}`,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontFamily: T.mono, fontSize: 10, letterSpacing: 1.2,
         color: T.inkMute, textTransform: 'uppercase',
       }}>
-        <span>⁕ фильм дня</span>
-        <span>№ 01 / {new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span>
+        <span>⁕ {slide.label}</span>
+        <span>{new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span>
       </div>
 
-      {/* poster */}
+      {/* poster block */}
       <div style={{
         background: T.blue, color: T.paper,
-        padding: '20px 18px', minHeight: 180, overflow: 'hidden',
+        padding: '20px 18px', minHeight: 160, overflow: 'hidden',
         position: 'relative',
       }}>
-        {/* decorative circle */}
         <div style={{
           position: 'absolute', top: -24, right: -24,
           width: 100, height: 100, borderRadius: '50%',
@@ -179,41 +214,45 @@ function FilmOfTheDay({ entry }: { entry?: Entry }) {
             fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
             opacity: 0.65, textTransform: 'uppercase', marginBottom: 10,
           }}>
-            {work?.year && `${work.year} · `}{work ? WORK_TYPE_LABEL[work.type] : 'кино'}
+            {work?.year && `${work.year} · `}{work ? WORK_TYPE_LABEL[work.type] : '—'}
           </div>
           <div style={{
-            fontFamily: T.display, fontSize: 44, fontWeight: 800,
-            lineHeight: 0.9, letterSpacing: -1.5,
+            fontFamily: T.display, fontSize: titleFs, fontWeight: 800,
+            lineHeight: 0.92, letterSpacing: -1,
             textTransform: 'uppercase',
           }}>
             {work ? work.title.replace(/\s+/g, '\n').split('\n').map((line, i) => (
-              <span key={i}>{line}<br/></span>
+              <span key={i}>{line}<br /></span>
             )) : (
-              <>Маг<br/>но<br/>лия</>
+              <span style={{ opacity: 0.25 }}>—</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* info */}
+      {/* emotion + cta */}
       <div style={{ padding: '12px 14px', display: 'grid', gap: 8 }}>
-        {entry && (
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Emo w={entry.cameWith.slice(0, 14)} kind="before" size="sm" />
-            <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
-            <Emo w={entry.leftWith.slice(0, 14)} kind="after" size="sm" />
-          </div>
+        {entry ? (
+          <>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Emo w={entry.cameWith.slice(0, 14)} kind="before" size="sm" />
+              <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
+              <Emo w={entry.leftWith.slice(0, 14)} kind="after" size="sm" />
+            </div>
+            <button
+              onClick={() => navigate(`/work/${entry.workId}`)}
+              style={{
+                background: T.ink, color: T.paper, border: 'none',
+                padding: '9px 12px', fontSize: 12, fontWeight: 500,
+                cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
+              }}
+            >открыть карточку →</button>
+          </>
+        ) : (
+          <p style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, margin: 0 }}>
+            записей пока нет
+          </p>
         )}
-        <button
-          onClick={() => entry && navigate(`/work/${entry.workId}`)}
-          style={{
-            background: T.ink, color: T.paper, border: 'none',
-            padding: '9px 12px', fontSize: 12, fontWeight: 500,
-            cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
-          }}
-        >
-          открыть карточку →
-        </button>
       </div>
     </aside>
   )
@@ -408,6 +447,7 @@ export function FeedPage() {
   const [page, setPage]               = useState(1)
   const [typeFilter, setTypeFilter]   = useState('all')
   const [afterSel, setAfterSel]       = useState<string[]>([])
+  const [featuredByType, setFeaturedByType] = useState<Record<string, Entry>>({})
   const navigate    = useNavigate()
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -424,6 +464,20 @@ export function FeedPage() {
     setLoading(true); setPage(1); setHasMore(true)
     loadEntries(1, typeFilter, true).finally(() => setLoading(false))
   }, [typeFilter, loadEntries])
+
+  // Загружаем по одной записи каждого типа для виджета дня
+  useEffect(() => {
+    Promise.all(
+      (['movie', 'series', 'anime', 'book'] as const).map(async (type) => {
+        const data = await api.entries.list(1, type) as Entry[]
+        return [type, data[0]] as const
+      })
+    ).then(pairs => {
+      const map: Record<string, Entry> = {}
+      pairs.forEach(([type, entry]) => { if (entry) map[type] = entry })
+      setFeaturedByType(map)
+    }).catch(console.error)
+  }, [])
 
   useEffect(() => {
     if (!hasMore || loadingMore) return
@@ -445,9 +499,6 @@ export function FeedPage() {
     const lw = e.leftWith.toLowerCase()
     return afterSel.some(w => lw.includes(w))
   })
-
-  // берём первую запись для "фильма дня"
-  const featured = entries[0]
 
   return (
     <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans }}>
@@ -526,7 +577,7 @@ export function FeedPage() {
 
           {/* ═══ RIGHT — виджеты ═══ */}
           <div style={{ display: 'grid', gap: 16, position: 'sticky', top: 80 }}>
-            <FilmOfTheDay entry={featured} />
+            <DayWidget featured={featuredByType} />
             <PortraitWidget entries={entries} />
             <div style={{
               padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
