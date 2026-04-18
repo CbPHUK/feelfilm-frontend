@@ -558,7 +558,7 @@ export function FeedPage() {
               </div>
             )}
 
-            {displayed.map((entry, i) => (
+            {!loading && displayed.map((entry, i) => (
               <PostRow
                 key={entry.id} entry={entry} n={i + 1}
                 onClick={() => navigate(`/work/${entry.workId}`)}
