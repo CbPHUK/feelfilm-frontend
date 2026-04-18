@@ -236,6 +236,32 @@ function AppInner() {
           </div>
         </div>
 
+        {/* Legal footer */}
+        <footer style={{
+          borderTop: `1px solid ${T.ink}`,
+          background: T.paper,
+          padding: '20px 40px',
+          fontFamily: T.mono,
+          fontSize: 10,
+          color: T.inkMute,
+          letterSpacing: '0.08em',
+        }}>
+          <div style={{
+            maxWidth: 1440, margin: '0 auto',
+            display: 'flex', flexWrap: 'wrap',
+            justifyContent: 'space-between', alignItems: 'center', gap: 12,
+          }}>
+            <span>© {new Date().getFullYear()} FeelFilm · ИП Сухань Д.А. · ОГРНИП на рассмотрении</span>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <a href="/privacy" style={{ color: T.inkMute, textDecoration: 'underline', cursor: 'pointer' }}>
+                Политика конфиденциальности
+              </a>
+              <span>Данные о фильмах: TMDB, MyAnimeList</span>
+              <span>18+</span>
+            </div>
+          </div>
+        </footer>
+
         {/* Auth modal */}
         {showAuthModal && (
           <div

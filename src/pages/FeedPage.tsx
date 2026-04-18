@@ -176,37 +176,47 @@ const TYPE_FILTERS = [
   { value: 'book',   label: 'книги' },
 ]
 
-function SideFilters({ typeFilter, onTypeChange, total }: {
-  typeFilter: string; onTypeChange: (t: string) => void; total: number
+const VIEWER_TO_TYPE: Record<string, string> = {
+  'нормис':      'all',
+  'нефор':       'movie',
+  'нишевый':     'book',
+  'сериалодрот': 'series',
+  'анимешник':   'anime',
+}
+
+const EMO_FILTERS = ['не отпускает', 'взорвал мозг', 'согрел', 'опустошил', 'задумал']
+
+function SideFilters({ typeFilter, onTypeChange, afterSel, onToggleAfter, total }: {
+  typeFilter: string; onTypeChange: (t: string) => void
+  afterSel: string[]; onToggleAfter: (w: string) => void
+  total: number
 }) {
+  const activeViewer = Object.entries(VIEWER_TO_TYPE).find(([, v]) => v === typeFilter)?.[0] ?? null
+
   const sections = [
     {
       title: 'лента',
       items: TYPE_FILTERS.map(f => ({
-        l: f.label, v: f.value, n: typeFilter === f.value ? total : undefined,
+        l: f.label, n: typeFilter === f.value ? total : undefined,
         active: typeFilter === f.value,
         onClick: () => onTypeChange(f.value),
       })),
     },
     {
       title: 'по эмоции',
-      items: [
-        { l: 'не отпускает', n: undefined, active: false, onClick: undefined },
-        { l: 'взорвал мозг', n: undefined, active: false, onClick: undefined },
-        { l: 'согрел',       n: undefined, active: false, onClick: undefined },
-        { l: 'опустошил',    n: undefined, active: false, onClick: undefined },
-        { l: 'задумал',      n: undefined, active: false, onClick: undefined },
-      ],
+      items: EMO_FILTERS.map(w => ({
+        l: w, n: undefined,
+        active: afterSel.includes(w),
+        onClick: () => onToggleAfter(w),
+      })),
     },
     {
       title: 'по зрителю',
-      items: [
-        { l: 'нормис',       n: undefined, active: false, onClick: undefined },
-        { l: 'нефор',        n: undefined, active: false, onClick: undefined },
-        { l: 'нишевый',      n: undefined, active: false, onClick: undefined },
-        { l: 'сериалодрот',  n: undefined, active: false, onClick: undefined },
-        { l: 'анимешник',    n: undefined, active: false, onClick: undefined },
-      ],
+      items: Object.keys(VIEWER_TO_TYPE).map(w => ({
+        l: w, n: undefined,
+        active: activeViewer === w,
+        onClick: () => onTypeChange(VIEWER_TO_TYPE[w]),
+      })),
     },
   ]
 
@@ -572,6 +582,8 @@ export function FeedPage() {
           <SideFilters
             typeFilter={typeFilter}
             onTypeChange={setTypeFilter}
+            afterSel={afterSel}
+            onToggleAfter={toggleAfter}
             total={entries.length}
           />
 
