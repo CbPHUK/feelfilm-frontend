@@ -6,9 +6,9 @@
   --bg-deep:         #ddd3bb;
   --bg-outer:        #d9d2bf;
 
-  --coral:           #d64026;
-  --coral-light:     rgba(214, 64, 38, 0.12);
-  --coral-muted:     rgba(214, 64, 38, 0.08);
+  --coral:           #b85c3c;
+  --coral-light:     rgba(184, 92, 60, 0.12);
+  --coral-muted:     rgba(184, 92, 60, 0.08);
 
   --teal:            #2b4fc2;
   --teal-light:      rgba(43, 79, 194, 0.12);
@@ -43,9 +43,9 @@
   --bg-deep:         #16140f;
   --bg-outer:        #12110d;
 
-  --coral:           #e04e30;
-  --coral-light:     rgba(224, 78, 48, 0.15);
-  --coral-muted:     rgba(224, 78, 48, 0.10);
+  --coral:           #c4623e;
+  --coral-light:     rgba(196, 98, 62, 0.15);
+  --coral-muted:     rgba(196, 98, 62, 0.10);
 
   --teal:            #4a6fd4;
   --teal-light:      rgba(74, 111, 212, 0.15);

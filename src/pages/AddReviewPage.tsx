@@ -15,7 +15,7 @@ const T = {
   inkMute:   'rgba(27,29,42,0.45)',
   rule:      'rgba(27,29,42,0.18)',
   ruleSoft:  'rgba(27,29,42,0.10)',
-  red:       '#d64026',
+  red:       '#b85c3c',
   blue:      '#2b4fc2',
   mono:      '"JetBrains Mono", ui-monospace, monospace',
   display:   '"Unbounded", "Inter", sans-serif',

@@ -14,7 +14,7 @@ const T = {
   rule:      'rgba(27,29,42,0.18)',
   ruleSoft:  'rgba(27,29,42,0.10)',
   blue:      '#2b4fc2',
-  red:       '#d64026',
+  red:       '#b85c3c',
   mono:      '"JetBrains Mono", ui-monospace, monospace',
   display:   '"Unbounded", "Inter", sans-serif',
   sans:      '"Inter", -apple-system, system-ui, sans-serif',
@@ -66,107 +66,6 @@ function Emo({
   )
 }
 
-// ── MoodSearch — точно по дизайну ─────────────────────────────
-const BEFORE_OPTS = ['скука', 'пустота', 'грусть', 'тревога', 'усталость', 'одиночество', 'апатия', 'злость']
-const AFTER_OPTS  = ['согрел', 'взорвал мозг', 'не отпускает', 'рассмешил', 'задумал', 'опустошил', 'зарядил', 'напугал']
-
-function MoodSearch({
-  beforeSel, afterSel, onToggleBefore, onToggleAfter, onSearch,
-}: {
-  beforeSel: string[]; afterSel: string[]
-  onToggleBefore: (w: string) => void; onToggleAfter: (w: string) => void
-  onSearch: () => void
-}) {
-  const total = beforeSel.length + afterSel.length
-  return (
-    <section style={{
-      border: `1px solid ${T.ink}`,
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr 220px',
-      minHeight: 260,
-      overflow: 'hidden',
-    }}>
-      {/* LEFT — title */}
-      <div style={{
-        background: T.paperSoft,
-        padding: '24px 28px',
-        borderRight: `1px solid ${T.ink}`,
-      }}>
-        <div style={{
-          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
-          color: T.red, textTransform: 'uppercase', marginBottom: 10,
-        }}>⁕ основное действие</div>
-        <h1 style={{
-          fontFamily: T.display, fontSize: 26, fontWeight: 700, margin: '0 0 14px',
-          letterSpacing: -0.5, lineHeight: 1.1, color: T.ink,
-        }}>
-          Найти фильм<br/>по настроению
-        </h1>
-        <p style={{ fontSize: 13, color: T.inkSoft, margin: 0, lineHeight: 1.55 }}>
-          Выбери, <b>с чем пришёл</b> и <b>что хочешь унести</b>. Покажем фильмы, которые так ощутили другие.
-        </p>
-      </div>
-
-      {/* CENTER — chips */}
-      <div style={{
-        background: T.paperSoft,
-        padding: '24px 24px',
-        borderRight: `1px solid ${T.ink}`,
-        display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
-        <div>
-          <div style={{
-            fontFamily: T.mono, fontSize: 10, color: T.red, letterSpacing: 1.2,
-            textTransform: 'uppercase', marginBottom: 8,
-          }}>с чем пришёл →</div>
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            {BEFORE_OPTS.map(w => (
-              <Emo key={w} w={w} kind="before" size="sm"
-                active={beforeSel.includes(w)} onClick={() => onToggleBefore(w)} />
-            ))}
-          </div>
-        </div>
-        <div>
-          <div style={{
-            fontFamily: T.mono, fontSize: 10, color: T.blue, letterSpacing: 1.2,
-            textTransform: 'uppercase', marginBottom: 8,
-          }}>хочу унести →</div>
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            {AFTER_OPTS.map(w => (
-              <Emo key={w} w={w} kind="after" size="sm"
-                active={afterSel.includes(w)} onClick={() => onToggleAfter(w)} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT — dark CTA block */}
-      <div
-        onClick={onSearch}
-        style={{
-          background: T.ink, color: T.paper,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', padding: '24px 20px', textAlign: 'center',
-        }}
-      >
-        <div>
-          <div style={{
-            fontFamily: T.sans, fontSize: 14, fontWeight: 600, lineHeight: 1.4,
-          }}>
-            {total > 0 ? `показать фильмы →` : 'показать всё →'}
-          </div>
-          {total > 0 && (
-            <div style={{
-              fontFamily: T.mono, fontSize: 10, color: 'rgba(233,226,207,0.5)',
-              marginTop: 6, letterSpacing: 1,
-            }}>выбрано {total} {total === 1 ? 'эмоция' : 'эмоции'}</div>
-          )}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // ── SideFilters — точно по дизайну ────────────────────────────
 const TYPE_FILTERS = [
   { value: 'all',    label: 'все' },
@@ -176,23 +75,13 @@ const TYPE_FILTERS = [
   { value: 'book',   label: 'книги' },
 ]
 
-const VIEWER_TO_TYPE: Record<string, string> = {
-  'нормис':      'all',
-  'нефор':       'movie',
-  'нишевый':     'book',
-  'сериалодрот': 'series',
-  'анимешник':   'anime',
-}
-
-const EMO_FILTERS = ['не отпускает', 'взорвал мозг', 'согрел', 'опустошил', 'задумал']
+const EMO_FILTERS = ['не отпускает', 'взорвал мозг', 'согрел', 'опустошил', 'задумал', 'напугал', 'зарядил']
 
 function SideFilters({ typeFilter, onTypeChange, afterSel, onToggleAfter, total }: {
   typeFilter: string; onTypeChange: (t: string) => void
   afterSel: string[]; onToggleAfter: (w: string) => void
   total: number
 }) {
-  const activeViewer = Object.entries(VIEWER_TO_TYPE).find(([, v]) => v === typeFilter)?.[0] ?? null
-
   const sections = [
     {
       title: 'лента',
@@ -208,14 +97,6 @@ function SideFilters({ typeFilter, onTypeChange, afterSel, onToggleAfter, total 
         l: w, n: undefined,
         active: afterSel.includes(w),
         onClick: () => onToggleAfter(w),
-      })),
-    },
-    {
-      title: 'по зрителю',
-      items: Object.keys(VIEWER_TO_TYPE).map(w => ({
-        l: w, n: undefined,
-        active: activeViewer === w,
-        onClick: () => onTypeChange(VIEWER_TO_TYPE[w]),
       })),
     },
   ]
@@ -399,8 +280,8 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
 
   return (
     <article onClick={onClick} style={{
-      display: 'grid', gridTemplateColumns: '36px 1fr 160px', gap: 20,
-      padding: '20px 0', borderBottom: `1px solid ${T.ruleSoft}`,
+      display: 'grid', gridTemplateColumns: '36px 1fr 180px', gap: 24,
+      padding: '28px 0', borderBottom: `1px solid ${T.ruleSoft}`,
       cursor: 'pointer',
     }}>
       {/* index */}
@@ -464,7 +345,7 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
 
       {/* poster */}
       <div style={{
-        width: '100%', height: 120, background: T.paperDeep,
+        width: '100%', height: 140, background: T.paperDeep,
         border: `1px solid ${T.rule}`, overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, position: 'relative',
@@ -496,7 +377,7 @@ function PostSkeleton() {
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: '36px 1fr 160px', gap: 20,
-      padding: '20px 0', borderBottom: `1px solid ${T.ruleSoft}`,
+      padding: '28px 0', borderBottom: `1px solid ${T.ruleSoft}`,
     }}>
       <div />
       <div>
@@ -518,7 +399,6 @@ export function FeedPage() {
   const [hasMore, setHasMore]         = useState(true)
   const [page, setPage]               = useState(1)
   const [typeFilter, setTypeFilter]   = useState('all')
-  const [beforeSel, setBeforeSel]     = useState<string[]>([])
   const [afterSel, setAfterSel]       = useState<string[]>([])
   const navigate    = useNavigate()
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -549,18 +429,13 @@ export function FeedPage() {
     return () => obs.disconnect()
   }, [hasMore, loadingMore, page, typeFilter, loadEntries])
 
-  const toggleBefore = (w: string) =>
-    setBeforeSel(p => p.includes(w) ? p.filter(x => x !== w) : [...p, w])
   const toggleAfter = (w: string) =>
     setAfterSel(p => p.includes(w) ? p.filter(x => x !== w) : [...p, w])
 
   const displayed = entries.filter(e => {
-    if (!beforeSel.length && !afterSel.length) return true
-    const cw = e.cameWith.toLowerCase(), lw = e.leftWith.toLowerCase()
-    return (
-      (!beforeSel.length || beforeSel.some(w => cw.includes(w))) &&
-      (!afterSel.length  || afterSel.some(w => lw.includes(w)))
-    )
+    if (!afterSel.length) return true
+    const lw = e.leftWith.toLowerCase()
+    return afterSel.some(w => lw.includes(w))
   })
 
   // берём первую запись для "фильма дня"
@@ -587,14 +462,8 @@ export function FeedPage() {
             total={entries.length}
           />
 
-          {/* ═══ CENTER — MoodSearch + Feed ═══ */}
+          {/* ═══ CENTER — Feed ═══ */}
           <div>
-            <MoodSearch
-              beforeSel={beforeSel} afterSel={afterSel}
-              onToggleBefore={toggleBefore} onToggleAfter={toggleAfter}
-              onSearch={() => navigate('/search')}
-            />
-
             {/* feed header */}
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',

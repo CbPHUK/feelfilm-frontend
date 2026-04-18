@@ -1,25 +1,104 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
-import { TagPicker } from '../components/TagPicker'
-import { FilmCard } from '../components/FilmCard'
 import { MOOD_BEFORE_TAGS, EFFECT_AFTER_TAGS, ATMOSPHERE_TAGS } from '../constants/emotions'
-import { useLang, fmtResults } from '../contexts/LangContext'
 import type { Film } from '../types'
+
+const T = {
+  paper:     '#e9e2cf',
+  paperSoft: '#efe7d2',
+  paperDeep: '#ddd3bb',
+  ink:       '#1b1d2a',
+  inkSoft:   'rgba(27,29,42,0.62)',
+  inkMute:   'rgba(27,29,42,0.45)',
+  rule:      'rgba(27,29,42,0.18)',
+  ruleSoft:  'rgba(27,29,42,0.10)',
+  red:       '#b85c3c',
+  blue:      '#2b4fc2',
+  mono:      '"JetBrains Mono", ui-monospace, monospace',
+  display:   '"Unbounded", "Inter", sans-serif',
+  sans:      '"Inter", -apple-system, system-ui, sans-serif',
+}
+
+function TagChip({
+  label, active, color, onClick,
+}: { label: string; active: boolean; color: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '8px 14px',
+        border: `1px solid ${active ? color : T.rule}`,
+        background: active ? color : 'transparent',
+        color: active ? T.paper : T.inkSoft,
+        fontSize: 13, fontWeight: active ? 600 : 400,
+        cursor: 'pointer', borderRadius: 3,
+        fontFamily: T.sans, transition: 'all 0.1s',
+        whiteSpace: 'nowrap',
+      }}
+    >{label}</button>
+  )
+}
+
+function TagGroup({
+  title, tags, selected, color, onChange, max = 3,
+}: {
+  title: string
+  tags: readonly string[]
+  selected: string[]
+  color: string
+  onChange: (v: string[]) => void
+  max?: number
+}) {
+  const toggle = (tag: string) => {
+    if (selected.includes(tag)) {
+      onChange(selected.filter(t => t !== tag))
+    } else if (selected.length < max) {
+      onChange([...selected, tag])
+    }
+  }
+  return (
+    <div>
+      <div style={{
+        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+        marginBottom: 12,
+      }}>
+        <div style={{
+          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+          color, textTransform: 'uppercase',
+        }}>{title}</div>
+        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.inkMute }}>
+          выбери до {max}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {tags.map(tag => (
+          <TagChip
+            key={tag} label={tag}
+            active={selected.includes(tag)}
+            color={color}
+            onClick={() => toggle(tag)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function SearchPage() {
   const [searchParams] = useSearchParams()
   const initEffect = searchParams.get('effect')
+  const navigate = useNavigate()
 
   const [moodBefore, setMoodBefore] = useState<string[]>([])
   const [effectAfter, setEffectAfter] = useState<string[]>(initEffect ? [initEffect] : [])
   const [atmosphere, setAtmosphere] = useState<string[]>([])
+  const [showEffect, setShowEffect] = useState(!!initEffect)
+  const [showAtmosphere, setShowAtmosphere] = useState(false)
   const [results, setResults] = useState<Film[] | null>(null)
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const { t, lang } = useLang()
 
-  const hasFilters = moodBefore.length || effectAfter.length || atmosphere.length
+  const hasFilters = moodBefore.length > 0
 
   const handleSearch = async (overrideEffect?: string[]) => {
     setLoading(true)
@@ -37,83 +116,179 @@ export function SearchPage() {
     }
   }
 
-  // Автозапуск если пришли с фильтром из MoodPicker
   useEffect(() => {
     if (initEffect) handleSearch([initEffect])
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="page-enter" style={{ paddingBottom: 90 }}>
-      {/* Шапка */}
-      <div style={{
-        padding: '24px 20px 16px',
-        background: 'var(--header-bg)',
-        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-        borderBottom: '1px solid var(--glass-border)',
-        position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px' }}>
-          {t.howAreYou}
-        </h1>
-        <p style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 2 }}>{t.findByMood}</p>
-      </div>
+    <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans, paddingBottom: 100 }}>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 32px' }}>
 
-      <div style={{ padding: '20px 16px 0' }}>
-        <TagPicker label={t.myMood} tags={MOOD_BEFORE_TAGS} selected={moodBefore} onChange={setMoodBefore} />
-        <TagPicker label={t.wantToFeel} tags={EFFECT_AFTER_TAGS} selected={effectAfter} onChange={setEffectAfter} />
-        <TagPicker label={t.atmosphere} tags={ATMOSPHERE_TAGS} selected={atmosphere} onChange={setAtmosphere} />
+        {/* Header */}
+        <div style={{
+          padding: '32px 0 24px',
+          borderBottom: `1px solid ${T.ink}`,
+          marginBottom: 32,
+        }}>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
+            color: T.red, textTransform: 'uppercase', marginBottom: 8,
+          }}>⁕ поиск по настроению</div>
+          <h1 style={{
+            fontFamily: T.display, fontSize: 'clamp(28px, 4vw, 44px)',
+            fontWeight: 800, letterSpacing: -1, margin: 0, lineHeight: 1, color: T.ink,
+          }}>Как ты сейчас?</h1>
+          <p style={{ fontSize: 13, color: T.inkSoft, marginTop: 10, lineHeight: 1.5 }}>
+            Выбери настроение — покажем, что смотрели другие в этот момент
+          </p>
+        </div>
 
+        {/* Required: Моё настроение */}
+        <div style={{ marginBottom: 28, paddingBottom: 28, borderBottom: `1px solid ${T.ruleSoft}` }}>
+          <TagGroup
+            title="моё настроение"
+            tags={MOOD_BEFORE_TAGS}
+            selected={moodBefore}
+            color={T.red}
+            onChange={setMoodBefore}
+          />
+        </div>
+
+        {/* Optional: Хочу почувствовать */}
+        {!showEffect ? (
+          <button
+            onClick={() => setShowEffect(true)}
+            style={{
+              background: 'none', border: `1px dashed ${T.rule}`,
+              color: T.inkMute, fontSize: 12, cursor: 'pointer',
+              padding: '10px 16px', fontFamily: T.sans,
+              borderRadius: 3, marginBottom: 12, display: 'block',
+            }}
+          >+ уточнить, что хочу почувствовать</button>
+        ) : (
+          <div style={{ marginBottom: 28, paddingBottom: 28, borderBottom: `1px solid ${T.ruleSoft}` }}>
+            <TagGroup
+              title="хочу почувствовать"
+              tags={EFFECT_AFTER_TAGS}
+              selected={effectAfter}
+              color={T.blue}
+              onChange={setEffectAfter}
+            />
+          </div>
+        )}
+
+        {/* Optional: Атмосфера */}
+        {!showAtmosphere ? (
+          <button
+            onClick={() => setShowAtmosphere(true)}
+            style={{
+              background: 'none', border: `1px dashed ${T.rule}`,
+              color: T.inkMute, fontSize: 12, cursor: 'pointer',
+              padding: '10px 16px', fontFamily: T.sans,
+              borderRadius: 3, marginBottom: 28, display: 'block',
+            }}
+          >+ добавить атмосферу</button>
+        ) : (
+          <div style={{ marginBottom: 28, paddingBottom: 28, borderBottom: `1px solid ${T.ruleSoft}` }}>
+            <TagGroup
+              title="атмосфера"
+              tags={ATMOSPHERE_TAGS}
+              selected={atmosphere}
+              color={T.ink}
+              onChange={setAtmosphere}
+            />
+          </div>
+        )}
+
+        {/* Find button */}
         <button
           onClick={() => handleSearch()}
           disabled={!hasFilters || loading}
-          className="hover-btn"
           style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: 'var(--r-lg)',
+            padding: '14px 40px',
             border: 'none',
-            background: hasFilters ? 'var(--coral)' : 'rgba(208,112,106,0.12)',
-            color: hasFilters ? '#fff' : 'var(--text-hint)',
-            fontSize: 15, fontWeight: 600,
-            cursor: hasFilters ? 'pointer' : 'default',
-            marginBottom: 28,
-            boxShadow: hasFilters ? '0 4px 20px rgba(208,112,106,0.28)' : 'none',
-            transition: 'all 0.2s',
-            letterSpacing: '0.02em',
+            background: hasFilters ? T.ink : T.paperDeep,
+            color: hasFilters ? T.paper : T.inkMute,
+            fontSize: 14, fontWeight: 600,
+            cursor: hasFilters && !loading ? 'pointer' : 'default',
+            fontFamily: T.sans, letterSpacing: 0.3,
+            transition: 'background 0.15s, color 0.15s',
+            marginBottom: 40,
           }}
         >
-          {loading ? t.searching : t.find}
+          {loading ? 'ищем...' : hasFilters ? 'найти →' : 'выбери настроение'}
         </button>
-      </div>
 
-      {results !== null && (
-        <div>
-          {results.length > 0 ? (
-            <>
-              <p style={{ padding: '0 16px 12px', fontSize: 11, color: 'var(--text-hint)', letterSpacing: '0.07em', textTransform: 'uppercase', fontWeight: 600 }}>
-                {fmtResults(results.length, lang)} — {lang === 'ru' ? 'по совпадению' : 'by relevance'}
-              </p>
-              <div className="film-grid">
-                {results.map((film) => (
-                  <FilmCard key={film.id} film={film} onClick={() => navigate(`/film/${film.id}`)} />
-                ))}
+        {/* Results */}
+        {results !== null && (
+          <div>
+            {results.length > 0 ? (
+              <>
+                <div style={{
+                  fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+                  color: T.inkMute, textTransform: 'uppercase', marginBottom: 20,
+                }}>
+                  найдено: {results.length}
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                  gap: '24px 16px',
+                }}>
+                  {results.map(film => (
+                    <div
+                      key={film.id}
+                      onClick={() => navigate(`/film/${film.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div style={{
+                        width: '100%', aspectRatio: '2/3',
+                        border: `1px solid ${T.rule}`,
+                        background: T.paperDeep,
+                        overflow: 'hidden', marginBottom: 8,
+                      }}>
+                        {film.posterUrl ? (
+                          <img src={film.posterUrl} alt={film.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            loading="lazy" />
+                        ) : (
+                          <div style={{
+                            width: '100%', height: '100%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: T.paperDeep,
+                          }}>
+                            <span style={{
+                              fontFamily: T.display, fontSize: 32, fontWeight: 800,
+                              color: T.inkMute, textTransform: 'uppercase',
+                            }}>{film.title[0]}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: T.ink, lineHeight: 1.3 }}>
+                        {film.title}
+                      </div>
+                      {film.year && (
+                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.inkMute, marginTop: 2 }}>
+                          {film.year}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 16 }}>
+                  ⁕ ничего не найдено
+                </p>
+                <p style={{ fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
+                  Попробуй убрать часть фильтров
+                </p>
               </div>
-            </>
-          ) : (
-            <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-              <p style={{ fontSize: 32, marginBottom: 12, opacity: 0.3 }}>◎</p>
-              <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 8 }}>
-                {t.noResults}
-              </p>
-              <p style={{ fontSize: 12, color: 'var(--text-hint)', lineHeight: 1.6, maxWidth: '32ch', margin: '0 auto' }}>
-                {lang === 'ru'
-                  ? 'Попробуй убрать часть фильтров — чем меньше условий, тем больше совпадений'
-                  : 'Try removing some filters — fewer conditions means more matches'}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
