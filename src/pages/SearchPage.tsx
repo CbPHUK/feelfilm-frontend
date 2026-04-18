@@ -27,7 +27,7 @@ const CONTENT_TABS = [
   { value: 'book',   label: 'Книги'   },
 ] as const
 
-const TYPE_ICON: Record<string, string> = { movie: '🎬', series: '📺', anime: '🎌', book: '📚' }
+const TYPE_ICON: Record<string, string> = { movie: '◈', series: '▦', anime: '✦', book: '◉' }
 
 type ContentType = 'movie' | 'series' | 'anime' | 'book'
 

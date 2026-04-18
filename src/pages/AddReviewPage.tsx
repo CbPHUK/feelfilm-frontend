@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import { useUser } from '../hooks/useUser'
 import { useToast } from '../contexts/ToastContext'
 import { useAuthModal } from '../contexts/AuthModalContext'
+import { VIEWER_TYPES } from '../constants/viewerTypes'
 import type { WorkSearchResult, Work } from '../types'
 
 const T = {
@@ -23,9 +24,10 @@ const T = {
 }
 
 const CAME_WITH_OPTS = [
-  'скука', 'пустота', 'грусть', 'тревога',
-  'усталость', 'одиночество', 'апатия', 'злость',
-  'интерес', 'предвкушение', 'ностальгия', 'беспокойство',
+  'интерес',       'предвкушение',  'любопытство',   'воодушевление',
+  'спокойствие',   'ностальгия',    'радость',       'вдохновение',
+  'усталость',     'грусть',        'тревога',       'скука',
+  'пустота',       'одиночество',   'апатия',        'злость',
 ]
 
 const LEFT_WITH_OPTS = [
@@ -39,7 +41,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const TYPE_ICONS: Record<string, string> = {
-  movie: '🎬', series: '📺', anime: '🎌', book: '📚',
+  movie: '◈', series: '▦', anime: '✦', book: '◉',
 }
 
 type ContentType = 'all' | 'movie' | 'series' | 'anime' | 'book'
@@ -51,11 +53,11 @@ function EmoChip({
     <button
       onClick={onClick}
       style={{
-        padding: '11px 14px',
+        padding: '14px 18px',
         border: `1px solid ${active ? color : T.rule}`,
         background: active ? color : T.paperSoft,
         color: active ? T.paper : T.inkSoft,
-        fontSize: 13, fontWeight: active ? 600 : 400,
+        fontSize: 14, fontWeight: active ? 600 : 400,
         cursor: 'pointer', borderRadius: 3,
         fontFamily: T.sans, transition: 'all 0.1s',
         textAlign: 'left', lineHeight: 1.3,
@@ -88,6 +90,9 @@ export function AddReviewPage() {
   const [atmosphere, setAtmosphere] = useState('')
   const [showNote, setShowNote] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [viewerType, setViewerType] = useState<string>(
+    () => localStorage.getItem('ff_viewer_type') ?? ''
+  )
 
   useEffect(() => {
     if (workIdParam) {
@@ -360,7 +365,7 @@ export function AddReviewPage() {
               </div>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                 gap: 8,
               }}>
                 {CAME_WITH_OPTS.map(w => (
@@ -396,7 +401,7 @@ export function AddReviewPage() {
               </div>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                 gap: 8,
               }}>
                 {LEFT_WITH_OPTS.map(w => (
@@ -406,6 +411,47 @@ export function AddReviewPage() {
                     color={T.blue}
                     onClick={() => setLeftWith(p => p === w ? '' : w)}
                   />
+                ))}
+              </div>
+            </div>
+
+            {/* Тип зрителя */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{
+                fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+                color: T.inkMute, textTransform: 'uppercase', marginBottom: 14,
+              }}>кто ты сейчас →</div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                gap: 8,
+              }}>
+                {VIEWER_TYPES.map(vt => (
+                  <button
+                    key={vt.id}
+                    onClick={() => {
+                      const next = viewerType === vt.id ? '' : vt.id
+                      setViewerType(next)
+                      localStorage.setItem('ff_viewer_type', next)
+                    }}
+                    style={{
+                      padding: '12px 16px',
+                      border: `1px solid ${viewerType === vt.id ? T.ink : T.rule}`,
+                      background: viewerType === vt.id ? T.ink : T.paperSoft,
+                      color: viewerType === vt.id ? T.paper : T.inkSoft,
+                      fontSize: 13, cursor: 'pointer', borderRadius: 3,
+                      fontFamily: T.sans, textAlign: 'left',
+                      transition: 'all 0.1s',
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>
+                      {vt.symbol} {vt.id}
+                    </div>
+                    <div style={{
+                      fontSize: 11, opacity: 0.7, lineHeight: 1.3,
+                      color: viewerType === vt.id ? T.paper : T.inkMute,
+                    }}>{vt.desc}</div>
+                  </button>
                 ))}
               </div>
             </div>

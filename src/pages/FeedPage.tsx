@@ -35,7 +35,7 @@ const WORK_TYPE_LABEL: Record<string, string> = {
 }
 
 const WORK_TYPE_ICON: Record<string, string> = {
-  movie: '🎬', series: '📺', anime: '🎌', book: '📚',
+  movie: '◈', series: '▦', anime: '✦', book: '◉',
 }
 
 // ── Emo chip ───────────────────────────────────────────────────
