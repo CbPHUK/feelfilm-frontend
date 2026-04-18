@@ -80,18 +80,27 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
         {/* logo */}
         <div
           onClick={() => navigate('/')}
-          style={{ display: 'flex', alignItems: 'baseline', gap: 8, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
         >
-          <div style={{
-            fontFamily: T.display, fontSize: 18, fontWeight: 800,
-            letterSpacing: -0.6, lineHeight: 1, color: T.ink,
-          }}>
-            FeelFilm<span style={{ color: T.red }}>.</span>
+          {/* логомарк — 4 кружка */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="6"  cy="6"  r="5" fill="#b85c3c" />
+            <circle cx="18" cy="6"  r="5" fill="#2b4fc2" />
+            <circle cx="6"  cy="18" r="5" fill="#c46480" />
+            <circle cx="18" cy="18" r="5" fill="#4a8c6a" />
+          </svg>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <div style={{
+              fontFamily: T.display, fontSize: 18, fontWeight: 800,
+              letterSpacing: -0.6, lineHeight: 1, color: T.ink,
+            }}>
+              FeelFilm<span style={{ color: T.red }}>.</span>
+            </div>
+            <span style={{
+              fontFamily: T.mono, fontSize: 9, color: T.inkMute, letterSpacing: 1.2,
+              textTransform: 'uppercase',
+            }} className="topbar-meta-hide">v.4 · 2026</span>
           </div>
-          <span style={{
-            fontFamily: T.mono, fontSize: 9, color: T.inkMute, letterSpacing: 1.2,
-            textTransform: 'uppercase',
-          }} className="topbar-meta-hide">v.4 · 2026</span>
         </div>
 
         {/* nav links */}
