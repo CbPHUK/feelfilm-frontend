@@ -34,6 +34,10 @@ const WORK_TYPE_LABEL: Record<string, string> = {
   movie: 'фильм', series: 'сериал', anime: 'аниме', book: 'книга',
 }
 
+const WORK_TYPE_ICON: Record<string, string> = {
+  movie: '🎬', series: '📺', anime: '🎌', book: '📚',
+}
+
 // ── Emo chip ───────────────────────────────────────────────────
 function Emo({
   w, kind = 'neutral', size = 'md', active, onClick,
@@ -304,7 +308,11 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
             fontSize: 11, fontWeight: 700, color: T.ink, flexShrink: 0,
           }}>{author[0]?.toUpperCase()}</span>
           <b style={{ color: T.ink }}>{author}</b>
-          {work && <span style={{ color: T.inkMute }}>· {WORK_TYPE_LABEL[work.type]}</span>}
+          {work && (
+            <span style={{ color: T.inkMute }}>
+              · {WORK_TYPE_ICON[work.type] ?? ''} {WORK_TYPE_LABEL[work.type]}
+            </span>
+          )}
           <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 10, color: T.inkMute }}>
             {timeAgo(entry.createdAt)}
           </span>

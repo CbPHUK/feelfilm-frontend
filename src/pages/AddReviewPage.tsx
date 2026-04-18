@@ -38,6 +38,10 @@ const TYPE_LABELS: Record<string, string> = {
   all: 'Всё', movie: 'Фильм', series: 'Сериал', anime: 'Аниме', book: 'Книга',
 }
 
+const TYPE_ICONS: Record<string, string> = {
+  movie: '🎬', series: '📺', anime: '🎌', book: '📚',
+}
+
 type ContentType = 'all' | 'movie' | 'series' | 'anime' | 'book'
 
 function EmoChip({
@@ -251,7 +255,7 @@ export function AddReviewPage() {
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>{item.title}</div>
                   <div style={{ fontSize: 11, color: T.inkMute, fontFamily: T.mono, marginTop: 2 }}>
-                    {item.year ? `${item.year} · ` : ''}{TYPE_LABELS[item.type]}
+                    {item.year ? `${item.year} · ` : ''}{TYPE_ICONS[item.type] ?? ''} {TYPE_LABELS[item.type]}
                     {item.id && <span style={{ color: T.red, marginLeft: 6 }}>◉ в каталоге</span>}
                   </div>
                 </div>

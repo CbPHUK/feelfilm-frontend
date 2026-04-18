@@ -20,6 +20,17 @@ const T = {
   sans:      '"Inter", -apple-system, system-ui, sans-serif',
 }
 
+const CONTENT_TABS = [
+  { value: 'movie',  label: 'Фильмы'  },
+  { value: 'series', label: 'Сериалы' },
+  { value: 'anime',  label: 'Аниме'   },
+  { value: 'book',   label: 'Книги'   },
+] as const
+
+const TYPE_ICON: Record<string, string> = { movie: '🎬', series: '📺', anime: '🎌', book: '📚' }
+
+type ContentType = 'movie' | 'series' | 'anime' | 'book'
+
 function TagChip({
   label, active, color, onClick,
 }: { label: string; active: boolean; color: string; onClick: () => void }) {
@@ -90,6 +101,7 @@ export function SearchPage() {
   const initEffect = searchParams.get('effect')
   const navigate = useNavigate()
 
+  const [contentType, setContentType] = useState<ContentType>('movie')
   const [moodBefore, setMoodBefore] = useState<string[]>([])
   const [effectAfter, setEffectAfter] = useState<string[]>(initEffect ? [initEffect] : [])
   const [atmosphere, setAtmosphere] = useState<string[]>([])
@@ -107,6 +119,7 @@ export function SearchPage() {
         moodBefore,
         effectAfter: overrideEffect ?? effectAfter,
         atmosphere,
+        type: contentType,
       })
       setResults(data as Film[])
     } catch (e) {
@@ -141,6 +154,31 @@ export function SearchPage() {
           <p style={{ fontSize: 13, color: T.inkSoft, marginTop: 10, lineHeight: 1.5 }}>
             Выбери настроение — покажем, что смотрели другие в этот момент
           </p>
+        </div>
+
+        {/* Content type tabs */}
+        <div style={{
+          display: 'flex', marginBottom: 32,
+          borderBottom: `1px solid ${T.rule}`,
+        }}>
+          {CONTENT_TABS.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => { setContentType(tab.value); setResults(null) }}
+              style={{
+                flex: 1, padding: '10px 6px',
+                border: 'none',
+                borderBottom: contentType === tab.value
+                  ? `2px solid ${T.ink}`
+                  : '2px solid transparent',
+                background: 'transparent',
+                color: contentType === tab.value ? T.ink : T.inkMute,
+                fontSize: 13, fontWeight: contentType === tab.value ? 600 : 400,
+                cursor: 'pointer', fontFamily: T.sans,
+                transition: 'all 0.1s', marginBottom: -1,
+              }}
+            >{tab.label}</button>
+          ))}
         </div>
 
         {/* Required: Моё настроение */}
@@ -267,11 +305,14 @@ export function SearchPage() {
                       <div style={{ fontSize: 12, fontWeight: 600, color: T.ink, lineHeight: 1.3 }}>
                         {film.title}
                       </div>
-                      {film.year && (
-                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.inkMute, marginTop: 2 }}>
-                          {film.year}
-                        </div>
-                      )}
+                      <div style={{ fontFamily: T.mono, fontSize: 10, color: T.inkMute, marginTop: 2 }}>
+                        {film.year ? `${film.year}` : ''}
+                        {(film as Film & { type?: string }).type && (
+                          <span style={{ marginLeft: film.year ? 6 : 0 }}>
+                            {TYPE_ICON[(film as Film & { type?: string }).type!]}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
