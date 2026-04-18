@@ -179,6 +179,39 @@ export function ProfilePage() {
           </div>
         )}
 
+        {/* Настройки */}
+        <div style={{
+          borderRadius: 'var(--r-lg)', overflow: 'hidden',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid var(--glass-border)',
+          boxShadow: 'var(--glass-shadow-sm)',
+          marginBottom: 16,
+        }}>
+          {/* Тема */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--glass-border)' }}>
+            <span style={{ fontSize: 15, color: 'var(--text)' }}>{t.theme}</span>
+            <Toggle active={theme === 'dark'} onToggle={toggleTheme} labelOn={t.darkMode} labelOff={t.lightMode} />
+          </div>
+          {/* Язык */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+            <span style={{ fontSize: 15, color: 'var(--text)' }}>{t.language}</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['ru', 'en'] as const).map((l) => (
+                <button key={l} onClick={() => setLang(l)} className="hover-chip" style={{
+                  padding: '5px 14px', borderRadius: 'var(--r-pill)',
+                  border: '1.5px solid var(--coral)',
+                  background: lang === l ? 'var(--coral)' : 'transparent',
+                  color: lang === l ? '#fff' : 'var(--coral)',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* История отзывов */}
         <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-hint)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
           {lang === 'ru' ? 'Мои отзывы' : 'My reviews'}

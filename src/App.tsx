@@ -26,7 +26,7 @@ const T = {
   inkMute: 'rgba(27,29,42,0.45)',
   rule:    'rgba(27,29,42,0.18)',
   ruleSoft:'rgba(27,29,42,0.10)',
-  red:     '#b85c3c',
+  red:     '#d64026',
   mono:    '"JetBrains Mono", ui-monospace, monospace',
   display: '"Unbounded", "Inter", sans-serif',
   sans:    '"Inter", -apple-system, system-ui, sans-serif',
@@ -51,6 +51,7 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
   const nav = [
     { l: 'лента',    path: '/' },
     { l: 'поиск',    path: '/search' },
+    { l: 'книги',    path: '/books' },
     { l: 'каталог',  path: '/library' },
     { l: 'профиль',  path: '/profile' },
   ]
