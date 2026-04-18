@@ -10,7 +10,7 @@ export function NavBar() {
     { path: '/',        label: t.feed },
     { path: '/search',  label: t.search },
     { path: '/add',     label: t.share },
-    { path: '/library', label: 'Каталог' },
+    { path: '/library', label: 'каталог' },
     { path: '/profile', label: t.profile },
   ]
 

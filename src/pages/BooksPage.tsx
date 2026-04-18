@@ -14,7 +14,7 @@ const T = {
   rule:      'rgba(27,29,42,0.18)',
   ruleSoft:  'rgba(27,29,42,0.10)',
   blue:      '#2b4fc2',
-  red:       '#d64026',
+  red:       '#b85c3c',
   mono:      '"JetBrains Mono", ui-monospace, monospace',
   display:   '"Unbounded", "Inter", sans-serif',
   sans:      '"Inter", -apple-system, system-ui, sans-serif',
