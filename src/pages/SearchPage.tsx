@@ -228,7 +228,7 @@ export function SearchPage() {
               background: 'none', border: `1px dashed ${T.rule}`,
               color: T.inkMute, fontSize: 12, cursor: 'pointer',
               padding: '10px 16px', fontFamily: T.sans,
-              borderRadius: 3, marginBottom: 28, display: 'block',
+              borderRadius: 3, marginBottom: 12, display: 'block',
             }}
           >+ добавить атмосферу</button>
         ) : (
@@ -251,10 +251,9 @@ export function SearchPage() {
               background: 'none', border: `1px dashed ${T.rule}`,
               color: T.inkMute, fontSize: 12, cursor: 'pointer',
               padding: '10px 16px', fontFamily: T.sans,
-              borderRadius: 3, display: 'flex', alignItems: 'center', gap: 8,
+              borderRadius: 3, display: 'block',
             }}
           >
-            <span>{showViewerType ? '▲' : '▼'}</span>
             {viewerType
               ? `ты — ${viewerType}`
               : '+ кто ты как зритель?'}
