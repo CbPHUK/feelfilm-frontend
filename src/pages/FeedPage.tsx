@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
+import { useIsMobile } from '../hooks/useIsMobile'
 import type { Entry } from '../types'
 
 // ── Design tokens ──────────────────────────────────────────────
@@ -318,82 +319,97 @@ const actionBtn: React.CSSProperties = {
   fontSize: 12, color: 'inherit', cursor: 'pointer', fontFamily: 'inherit',
 }
 
-function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () => void }) {
+function PostRow({ entry, n, onClick, mobile = false }: {
+  entry: Entry; n: number; onClick: () => void; mobile?: boolean
+}) {
   const work = entry.work
   const author = entry.user?.firstName ?? 'Аноним'
 
+  const posterW = mobile ? 80 : 180
+  const posterH = mobile ? 110 : 140
+  const titleFs = mobile ? 18 : 22
+
   return (
     <article onClick={onClick} style={{
-      display: 'grid', gridTemplateColumns: '36px 1fr 180px', gap: 24,
-      padding: '28px 0', borderBottom: `1px solid ${T.ruleSoft}`,
+      display: 'grid',
+      gridTemplateColumns: mobile ? `1fr ${posterW}px` : `36px 1fr ${posterW}px`,
+      gap: mobile ? 12 : 24,
+      padding: mobile ? '16px 0' : '28px 0',
+      borderBottom: `1px solid ${T.ruleSoft}`,
       cursor: 'pointer',
     }}>
-      {/* index */}
-      <div style={{ paddingTop: 3, textAlign: 'right' }}>
-        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
-          {String(n).padStart(2, '0')}
-        </span>
-      </div>
+      {/* index — только на десктопе */}
+      {!mobile && (
+        <div className="post-row-num" style={{ paddingTop: 3, textAlign: 'right' }}>
+          <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
+            {String(n).padStart(2, '0')}
+          </span>
+        </div>
+      )}
 
       {/* content */}
-      <div>
+      <div style={{ minWidth: 0 }}>
         {/* author row */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
-          fontSize: 12, color: T.inkSoft,
+          display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6,
+          fontSize: 12, color: T.inkSoft, flexWrap: 'nowrap', overflow: 'hidden',
         }}>
           <span style={{
-            width: 22, height: 22, borderRadius: '50%', background: T.paperDeep,
+            width: 20, height: 20, borderRadius: '50%', background: T.paperDeep,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 700, color: T.ink, flexShrink: 0,
+            fontSize: 10, fontWeight: 700, color: T.ink, flexShrink: 0,
           }}>{author[0]?.toUpperCase()}</span>
-          <b style={{ color: T.ink }}>{author}</b>
+          <b style={{ color: T.ink, flexShrink: 0 }}>{author}</b>
           {work && (
-            <span style={{ color: T.inkMute }}>
+            <span style={{ color: T.inkMute, flexShrink: 0 }}>
               · {WORK_TYPE_LABEL[work.type]}
             </span>
           )}
-          <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 10, color: T.inkMute }}>
+          <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 10, color: T.inkMute, flexShrink: 0 }}>
             {timeAgo(entry.createdAt)}
           </span>
         </div>
 
         {/* title */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
           <h3 style={{
-            margin: 0, fontFamily: T.display, fontSize: 22, fontWeight: 700,
-            letterSpacing: -0.4, color: T.ink, lineHeight: 1.1,
-          }}>{work?.title ?? '—'}</h3>
-          {work?.year && (
-            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{work.year}</span>
+            margin: 0, fontFamily: T.display, fontSize: titleFs, fontWeight: 700,
+            letterSpacing: -0.3, color: T.ink, lineHeight: 1.1,
+            overflow: 'hidden', display: '-webkit-box',
+            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          } as React.CSSProperties}>{work?.title ?? '—'}</h3>
+          {!mobile && work?.year && (
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, flexShrink: 0 }}>{work.year}</span>
           )}
         </div>
 
         {/* emotion arc */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: mobile ? 0 : 10 }}>
           <Emo w={entry.cameWith} kind="before" size="sm" />
-          <span style={{ color: T.inkMute, fontSize: 13 }}>→</span>
+          <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
           <Emo w={entry.leftWith} kind="after" size="sm" />
         </div>
 
-        {/* quote */}
-        {entry.atmosphere && (
+        {/* quote — только десктоп */}
+        {!mobile && entry.atmosphere && (
           <p style={{
-            margin: '0 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
+            margin: '8px 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
             overflow: 'hidden', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           } as React.CSSProperties}>{entry.atmosphere}</p>
         )}
 
-        <button style={{ ...actionBtn, color: T.inkMute }}
-          onClick={e => { e.stopPropagation(); onClick() }}>
-          читать полностью →
-        </button>
+        {!mobile && (
+          <button style={{ ...actionBtn, color: T.inkMute }}
+            onClick={e => { e.stopPropagation(); onClick() }}>
+            читать полностью →
+          </button>
+        )}
       </div>
 
       {/* poster */}
       <div style={{
-        width: '100%', height: 140, background: T.paperDeep,
+        width: '100%', height: posterH, background: T.paperDeep,
         border: `1px solid ${T.rule}`, overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, position: 'relative',
@@ -403,18 +419,16 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
         ) : (
           <>
-            {/* первая буква названия */}
             <span style={{
-              fontFamily: T.display, fontSize: 56, fontWeight: 800,
+              fontFamily: T.display, fontSize: mobile ? 36 : 56, fontWeight: 800,
               color: T.rule, textTransform: 'uppercase', lineHeight: 1,
               userSelect: 'none',
             }}>{work?.title?.[0] ?? '?'}</span>
-            {/* тип внизу */}
             {work && (
               <span style={{
-                position: 'absolute', bottom: 8, left: 0, right: 0,
+                position: 'absolute', bottom: 6, left: 0, right: 0,
                 textAlign: 'center',
-                fontFamily: T.mono, fontSize: 9, letterSpacing: 1.2,
+                fontFamily: T.mono, fontSize: 8, letterSpacing: 1,
                 color: T.inkMute, textTransform: 'uppercase',
               }}>{WORK_TYPE_LABEL[work.type]}</span>
             )}
@@ -456,6 +470,7 @@ export function FeedPage() {
   const [featuredByType, setFeaturedByType] = useState<Record<string, Entry>>({})
   const navigate    = useNavigate()
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const isMobile    = useIsMobile()
 
   const loadEntries = useCallback(async (p: number, type: string, replace: boolean) => {
     try {
@@ -506,46 +521,82 @@ export function FeedPage() {
     return afterSel.some(w => lw.includes(w))
   })
 
+  const TYPE_FILTERS_MOBILE = [
+    { value: 'all',    label: 'все' },
+    { value: 'movie',  label: 'фильмы' },
+    { value: 'series', label: 'сериалы' },
+    { value: 'anime',  label: 'аниме' },
+    { value: 'book',   label: 'книги' },
+  ]
+
   return (
     <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans }}>
-      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 40px 80px' }}>
 
-        {/* ── 3-колоночная сетка ──────────────────────────────── */}
+      {/* Горизонтальная полоса фильтров — только мобиле */}
+      {isMobile && (
+        <div className="mobile-type-strip">
+          {TYPE_FILTERS_MOBILE.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setTypeFilter(f.value)}
+              style={{
+                padding: '7px 16px', whiteSpace: 'nowrap', flexShrink: 0,
+                border: `1px solid ${typeFilter === f.value ? T.ink : T.rule}`,
+                background: typeFilter === f.value ? T.ink : 'transparent',
+                color: typeFilter === f.value ? T.paper : T.inkSoft,
+                fontSize: 13, fontWeight: typeFilter === f.value ? 600 : 400,
+                cursor: 'pointer', borderRadius: 3, fontFamily: T.sans,
+              }}
+            >{f.label}</button>
+          ))}
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: isMobile ? '0 16px 80px' : '28px 40px 80px' }}>
+
+        {/* ── 3-колоночная сетка (десктоп) / 1 колонка (мобиле) ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '200px 1fr 280px',
-          gap: 32,
+          gridTemplateColumns: isMobile ? '1fr' : '200px 1fr 280px',
+          gap: isMobile ? 0 : 32,
           alignItems: 'start',
         }}>
 
-          {/* ═══ LEFT — SideFilters ═══ */}
-          <SideFilters
-            typeFilter={typeFilter}
-            onTypeChange={setTypeFilter}
-            afterSel={afterSel}
-            onToggleAfter={toggleAfter}
-            total={entries.length}
-          />
+          {/* ═══ LEFT — SideFilters (только десктоп) ═══ */}
+          {!isMobile && (
+            <div className="feed-col-left">
+              <SideFilters
+                typeFilter={typeFilter}
+                onTypeChange={setTypeFilter}
+                afterSel={afterSel}
+                onToggleAfter={toggleAfter}
+                total={entries.length}
+              />
+            </div>
+          )}
 
           {/* ═══ CENTER — Feed ═══ */}
           <div>
             {/* feed header */}
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-              padding: '28px 0 12px', borderBottom: `1px solid ${T.ink}`,
+              padding: isMobile ? '16px 0 10px' : '28px 0 12px',
+              borderBottom: `1px solid ${T.ink}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
                 <h2 style={{
-                  margin: 0, fontFamily: T.display, fontSize: 22, fontWeight: 700,
-                  letterSpacing: -0.4, color: T.ink,
+                  margin: 0, fontFamily: T.display, fontSize: isMobile ? 18 : 22,
+                  fontWeight: 700, letterSpacing: -0.4, color: T.ink,
                 }}>Лента</h2>
                 <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
                   {entries.length} {entries.length === 1 ? 'отзыв' : 'отзывов'}
                 </span>
               </div>
-              <span style={{ fontSize: 11, color: T.inkMute, fontFamily: T.mono }}>
-                хронология ↓
-              </span>
+              {!isMobile && (
+                <span style={{ fontSize: 11, color: T.inkMute, fontFamily: T.mono }}>
+                  хронология ↓
+                </span>
+              )}
             </div>
 
             {loading && <><PostSkeleton /><PostSkeleton /><PostSkeleton /></>}
@@ -557,7 +608,7 @@ export function FeedPage() {
                 </p>
                 <button onClick={() => navigate('/add')} style={{
                   background: T.ink, color: T.paper, border: 'none',
-                  padding: '10px 24px', fontSize: 13, cursor: 'pointer',
+                  padding: '12px 28px', fontSize: 14, cursor: 'pointer',
                   fontFamily: T.sans, borderRadius: 3,
                 }}>Написать первым →</button>
               </div>
@@ -566,6 +617,7 @@ export function FeedPage() {
             {!loading && displayed.map((entry, i) => (
               <PostRow
                 key={entry.id} entry={entry} n={i + 1}
+                mobile={isMobile}
                 onClick={() => navigate(`/work/${entry.workId}`)}
               />
             ))}
@@ -581,18 +633,20 @@ export function FeedPage() {
             )}
           </div>
 
-          {/* ═══ RIGHT — виджеты ═══ */}
-          <div style={{ display: 'grid', gap: 16, position: 'sticky', top: 80 }}>
-            <DayWidget featured={featuredByType} />
-            <PortraitWidget entries={entries} />
-            <div style={{
-              padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
-              color: T.inkMute, letterSpacing: 1.2, textAlign: 'center',
-              borderTop: `1px dashed ${T.rule}`,
-            }}>
-              ⁕ {entries.length} записей · FeelFilm
+          {/* ═══ RIGHT — виджеты (только десктоп) ═══ */}
+          {!isMobile && (
+            <div className="feed-col-right" style={{ display: 'grid', gap: 16, position: 'sticky', top: 80 }}>
+              <DayWidget featured={featuredByType} />
+              <PortraitWidget entries={entries} />
+              <div style={{
+                padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
+                color: T.inkMute, letterSpacing: 1.2, textAlign: 'center',
+                borderTop: `1px dashed ${T.rule}`,
+              }}>
+                ⁕ {entries.length} записей · FeelFilm
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>

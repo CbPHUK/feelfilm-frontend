@@ -160,7 +160,7 @@ export function AddReviewPage() {
       minHeight: '100vh', background: T.paper, color: T.ink,
       fontFamily: T.sans, paddingBottom: 100,
     }}>
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px' }}>
+      <div className="page-content-wrap" style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px' }}>
 
         {/* ── STEP 1: Search ─────────────────────────────────── */}
         {step === 'search' && (

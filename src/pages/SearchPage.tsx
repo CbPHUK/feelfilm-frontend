@@ -135,7 +135,7 @@ export function SearchPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans, paddingBottom: 100 }}>
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 32px' }}>
+      <div className="page-content-wrap" style={{ maxWidth: 860, margin: '0 auto', padding: '0 32px' }}>
 
         {/* Header */}
         <div style={{

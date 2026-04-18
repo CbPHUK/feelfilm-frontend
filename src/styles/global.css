@@ -80,6 +80,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 html, body, #root { min-height: 100vh; }
 
 body {
@@ -87,6 +92,8 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* ─── Фоновые блобы ─── */
@@ -666,4 +673,43 @@ body::before {
 }
 .book-card-wrap:active {
   transform: scale(0.98);
+}
+
+/* ─── Mobile responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Гарантированный запрет горизонтального скролла */
+  * { max-width: 100%; }
+
+  /* Feed: скрыть боковые колонки */
+  .feed-col-left,
+  .feed-col-right { display: none !important; }
+
+  /* PostRow: убрать индексный номер */
+  .post-row-num { display: none !important; }
+
+  /* Поиск + добавление: меньший padding */
+  .page-content-wrap {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Топбар: логотип ужимается */
+  .topbar-logo-version { display: none !important; }
+}
+
+/* Мобильная полоса фильтров — показываем только на мобиле */
+.mobile-type-strip {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-type-strip {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(27,29,42,0.12);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mobile-type-strip::-webkit-scrollbar { display: none; }
 }
