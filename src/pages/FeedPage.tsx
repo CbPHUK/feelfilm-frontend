@@ -162,7 +162,7 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
   const work  = entry?.work
 
   const titleLen = work?.title?.length ?? 0
-  const titleFs  = titleLen > 20 ? 26 : titleLen > 13 ? 34 : 42
+  const titleFs  = titleLen > 18 ? 20 : titleLen > 12 ? 26 : 32
 
   return (
     <aside style={{ border: `1px solid ${T.ink}`, overflow: 'hidden' }}>
@@ -181,7 +181,7 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
       {/* poster block */}
       <div style={{
         background: T.blue, color: T.paper,
-        padding: '20px 18px', minHeight: 160, overflow: 'hidden',
+        padding: '20px 18px 42px', minHeight: 160, overflow: 'hidden',
         position: 'relative',
       }}>
         <div style={{
@@ -209,9 +209,10 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
           </div>
         </div>
 
-        {/* dots */}
+        {/* dots — зафиксированы внизу постера */}
         <div style={{
-          display: 'flex', gap: 6, marginTop: 20,
+          position: 'absolute', bottom: 14, left: 18,
+          display: 'flex', gap: 6,
         }}>
           {SLIDE_TYPES.map((s, i) => (
             <button
