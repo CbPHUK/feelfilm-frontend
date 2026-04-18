@@ -1,104 +1,164 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
-import { BookCard } from '../components/BookCard'
-import { TagPicker } from '../components/TagPicker'
-import { MOOD_BEFORE_TAGS, EFFECT_AFTER_TAGS, ATMOSPHERE_TAGS } from '../constants/emotions'
-import { useLang, fmtResults } from '../contexts/LangContext'
-import { useTheme } from '../contexts/ThemeContext'
 import type { Film } from '../types'
 
-const MARQUEE_WORDS = [
-  'Достоевский', 'Ремарк', 'Толстой', 'Кафка', 'Оруэлл',
-  'Гессе', 'Камю', 'Набоков', 'Булгаков', 'Маркес',
-  'Хемингуэй', 'Мураками', 'Брэдбери', 'Толкин', 'Кинг',
+// ── Design tokens ──────────────────────────────────────────────
+const T = {
+  paper:     '#e9e2cf',
+  paperSoft: '#efe7d2',
+  paperDeep: '#ddd3bb',
+  ink:       '#1b1d2a',
+  inkSoft:   'rgba(27,29,42,0.62)',
+  inkMute:   'rgba(27,29,42,0.45)',
+  rule:      'rgba(27,29,42,0.18)',
+  ruleSoft:  'rgba(27,29,42,0.10)',
+  blue:      '#2b4fc2',
+  red:       '#d64026',
+  mono:      '"JetBrains Mono", ui-monospace, monospace',
+  display:   '"Unbounded", "Inter", sans-serif',
+  sans:      '"Inter", -apple-system, system-ui, sans-serif',
+}
+
+const MARQUEE_AUTHORS = [
+  'Достоевский', '·', 'Ремарк', '·', 'Толстой', '·', 'Кафка', '·',
+  'Оруэлл', '·', 'Гессе', '·', 'Камю', '·', 'Набоков', '·',
+  'Булгаков', '·', 'Маркес', '·', 'Мураками', '·', 'Брэдбери', '·',
 ]
 
-function BookMarquee({ gold, hint }: { gold: string; hint: string }) {
-  const doubled = [...MARQUEE_WORDS, ...MARQUEE_WORDS]
+function AuthorMarquee() {
+  const doubled = [...MARQUEE_AUTHORS, ...MARQUEE_AUTHORS]
   return (
-    <div style={{ overflow: 'hidden', borderTop: `1px solid ${gold}20`, borderBottom: `1px solid ${gold}20`, padding: '10px 0', margin: '0' }}>
+    <div style={{
+      overflow: 'hidden',
+      borderTop: `1px solid ${T.rule}`,
+      borderBottom: `1px solid ${T.rule}`,
+      padding: '8px 0',
+      background: T.paperDeep,
+    }}>
       <div style={{
-        display: 'flex', gap: 0,
-        animation: 'marquee 28s linear infinite',
-        width: 'max-content',
+        display: 'flex', gap: 0, width: 'max-content',
+        animation: 'marquee 32s linear infinite',
       }}>
-        {doubled.map((word, i) => (
+        {doubled.map((w, i) => (
           <span key={i} style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-            textTransform: 'uppercase', color: i % 3 === 0 ? gold : hint,
-            padding: '0 20px', whiteSpace: 'nowrap',
-            display: 'flex', alignItems: 'center', gap: 20,
-          }}>
-            {word}
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: `${gold}60`, display: 'inline-block' }} />
-          </span>
+            fontSize: 11, fontWeight: w === '·' ? 400 : 700,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: w === '·' ? T.inkMute : T.inkSoft,
+            padding: '0 12px', whiteSpace: 'nowrap',
+            fontFamily: T.mono,
+          }}>{w}</span>
         ))}
       </div>
     </div>
   )
 }
 
-const PAGE_SIZE = 100
-
-// Скелетон обложки книги
-function BookSkeleton() {
+// ── Book cover card ────────────────────────────────────────────
+function BookCard({ book, onClick }: { book: Film; onClick: () => void }) {
+  const [imgError, setImgError] = useState(false)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div
+      onClick={onClick}
+      style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}
+    >
+      {/* cover */}
       <div style={{
-        width: '100%', aspectRatio: '2/3', borderRadius: 6,
-        background: 'rgba(201,150,60,0.08)', animation: 'pulse 1.4s ease-in-out infinite',
-      }} />
-      <div style={{ height: 12, borderRadius: 4, background: 'rgba(201,150,60,0.08)', width: '80%' }} />
-      <div style={{ height: 10, borderRadius: 4, background: 'rgba(201,150,60,0.06)', width: '55%' }} />
+        width: '100%', aspectRatio: '2/3',
+        border: `1px solid ${T.rule}`,
+        background: T.paperDeep,
+        overflow: 'hidden', position: 'relative',
+        transition: 'border-color 0.15s',
+      }}
+        onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.borderColor = T.ink}
+        onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = T.rule}
+      >
+        {book.posterUrl && !imgError ? (
+          <img
+            src={book.posterUrl} alt={book.title}
+            onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            loading="lazy"
+          />
+        ) : (
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '12px 8px', textAlign: 'center',
+            background: T.paperDeep,
+          }}>
+            <div style={{
+              fontFamily: T.display, fontSize: 12, fontWeight: 700,
+              color: T.ink, lineHeight: 1.2, textTransform: 'uppercase',
+              letterSpacing: '-0.2px',
+            }}>{book.title}</div>
+            {book.author && (
+              <div style={{
+                fontFamily: T.mono, fontSize: 9, color: T.inkMute,
+                marginTop: 8, letterSpacing: 1, textTransform: 'uppercase',
+              }}>{book.author}</div>
+            )}
+          </div>
+        )}
+        {book._count?.reviews !== undefined && book._count.reviews > 0 && (
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            background: `${T.ink}cc`, padding: '4px 6px',
+            fontFamily: T.mono, fontSize: 9, color: T.paper, letterSpacing: 1,
+          }}>
+            {book._count.reviews} {book._count.reviews === 1 ? 'отзыв' : 'отзывов'}
+          </div>
+        )}
+      </div>
+
+      {/* meta */}
+      <div>
+        <div style={{
+          fontSize: 12, fontWeight: 600, color: T.ink, lineHeight: 1.3,
+          overflow: 'hidden', display: '-webkit-box',
+          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        } as React.CSSProperties}>{book.title}</div>
+        {(book.author || book.year) && (
+          <div style={{
+            fontSize: 11, color: T.inkMute, marginTop: 2,
+            fontFamily: T.mono, letterSpacing: 0.5,
+          }}>
+            {book.author ?? ''}{book.author && book.year ? ' · ' : ''}{book.year ?? ''}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
+function BookSkeleton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ width: '100%', aspectRatio: '2/3', background: T.paperDeep }} />
+      <div style={{ height: 12, background: T.paperDeep, borderRadius: 2, width: '80%' }} />
+      <div style={{ height: 10, background: T.paperDeep, borderRadius: 2, width: '55%' }} />
+    </div>
+  )
+}
+
+const PAGE_SIZE = 100
+
 export function BooksPage() {
-  const [books, setBooks] = useState<Film[]>([])
-  const [loading, setLoading] = useState(true)
+  const [books, setBooks]         = useState<Film[]>([])
+  const [loading, setLoading]     = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(1)
-
-  const [mode, setMode] = useState<'browse' | 'search'>('browse')
-  const [moodBefore, setMoodBefore] = useState<string[]>([])
-  const [effectAfter, setEffectAfter] = useState<string[]>([])
-  const [atmosphere, setAtmosphere] = useState<string[]>([])
-  const [searchResults, setSearchResults] = useState<Film[] | null>(null)
-  const [searchLoading, setSearchLoading] = useState(false)
-
-  const navigate = useNavigate()
-  const { lang } = useLang()
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  const [hasMore, setHasMore]     = useState(true)
+  const [page, setPage]           = useState(1)
+  const [query, setQuery]         = useState('')
+  const navigate   = useNavigate()
   const sentinelRef = useRef<HTMLDivElement>(null)
-
-  const hasFilters = moodBefore.length || effectAfter.length || atmosphere.length
-
-  const handleSearch = async () => {
-    setSearchLoading(true)
-    try {
-      const data = await api.reviews.search({ moodBefore, effectAfter, atmosphere, type: 'book' })
-      setSearchResults(data as Film[])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setSearchLoading(false)
-    }
-  }
-
-  const handleReset = () => {
-    setMoodBefore([]); setEffectAfter([]); setAtmosphere([])
-    setSearchResults(null)
-  }
 
   const loadBooks = useCallback(async (p: number, replace: boolean) => {
     try {
       const data = await api.films.list(p, 'book') as Film[]
       if (replace) setBooks(data)
-      else setBooks((prev) => [...prev, ...data])
+      else setBooks(prev => [...prev, ...data])
       setHasMore(data.length === PAGE_SIZE)
     } catch (e) { console.error(e) }
   }, [])
@@ -109,274 +169,179 @@ export function BooksPage() {
   }, [loadBooks])
 
   useEffect(() => {
-    if (!hasMore || loadingMore || mode !== 'browse') return
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          const nextPage = page + 1
-          setPage(nextPage)
-          setLoadingMore(true)
-          loadBooks(nextPage, false).finally(() => setLoadingMore(false))
-        }
-      },
-      { threshold: 0.1 }
-    )
+    if (!hasMore || loadingMore) return
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        const next = page + 1; setPage(next); setLoadingMore(true)
+        loadBooks(next, false).finally(() => setLoadingMore(false))
+      }
+    }, { threshold: 0.1 })
     if (sentinelRef.current) obs.observe(sentinelRef.current)
     return () => obs.disconnect()
-  }, [hasMore, loadingMore, page, loadBooks, mode])
+  }, [hasMore, loadingMore, page, loadBooks])
 
-  // Цвета раздела книг
-  const BG = isDark ? '#0f0d09' : '#f5f0e6'
-  const SURFACE = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
-  const BORDER = isDark ? 'rgba(201,150,60,0.15)' : 'rgba(139,100,30,0.15)'
-  const GOLD = '#c9963c'
-  const TEXT = isDark ? '#e8d9c0' : '#2a1f0e'
-  const HINT = isDark ? '#8a7560' : '#9a8060'
-  const HEADER_BG = isDark ? 'rgba(15,13,9,0.88)' : 'rgba(245,240,230,0.88)'
+  const filtered = query.trim()
+    ? books.filter(b =>
+        b.title.toLowerCase().includes(query.toLowerCase()) ||
+        (b.author ?? '').toLowerCase().includes(query.toLowerCase())
+      )
+    : books
 
   return (
-    <div
-      className="page-enter"
-      style={{
-        paddingBottom: 90,
-        background: BG,
-        minHeight: '100vh',
-      }}
-    >
-      {/* Шапка */}
+    <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans }}>
+
+      {/* ── Hero ─────────────────────────────────────────────── */}
       <div style={{
-        padding: '16px 20px',
-        background: HEADER_BG,
-        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-        borderBottom: `1px solid ${BORDER}`,
-        position: 'sticky', top: 0, zIndex: 10,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '48px 48px 40px',
+        borderBottom: `1px solid ${T.ink}`,
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        gap: 40, alignItems: 'end',
+        maxWidth: 1440, margin: '0 auto',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 18, color: HINT }}
-          >←</button>
-          <div>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: GOLD }}>
-              FeelFilm Books
+        <div>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
+            color: T.red, textTransform: 'uppercase', marginBottom: 10,
+          }}>⁕ книги · каталог</div>
+          <h1 style={{
+            fontFamily: T.display, fontSize: 'clamp(44px, 6vw, 80px)',
+            fontWeight: 800, margin: '0 0 20px', letterSpacing: -2,
+            lineHeight: 0.95, color: T.ink,
+          }}>
+            Читай.<br/>Чувствуй.
+          </h1>
+          <p style={{
+            fontSize: 14, color: T.inkSoft, lineHeight: 1.6,
+            maxWidth: 440, margin: '0 0 24px',
+          }}>
+            Не рейтинги и рецензии — а эмоции. Что ты чувствовал до и после.
+            Найди книгу под своё настроение.
+          </p>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{
+              fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1,
+            }}>◉ {books.length} книг</span>
+            <span style={{
+              fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1,
+            }}>
+              ♡ {books.reduce((s, b) => s + (b._count?.reviews ?? 0), 0)} отзывов
+            </span>
+            <button
+              onClick={() => navigate('/add')}
+              style={{
+                background: T.ink, color: T.paper, border: 'none',
+                padding: '9px 18px', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
+              }}
+            >+ написать отзыв на книгу</button>
+          </div>
+        </div>
+
+        {/* search */}
+        <div style={{ minWidth: 260 }}>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, color: T.inkMute,
+            letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 8,
+          }}>поиск по каталогу</div>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="автор или название..."
+            style={{
+              width: '100%', padding: '10px 14px',
+              border: `1px solid ${T.ink}`, background: T.paperSoft,
+              fontSize: 13, fontFamily: T.sans, color: T.ink,
+              outline: 'none', borderRadius: 3,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── Author marquee ────────────────────────────────────── */}
+      <AuthorMarquee />
+
+      {/* ── Grid ─────────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '36px 48px 80px' }}>
+
+        {/* grid header */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+          paddingBottom: 14, borderBottom: `1px solid ${T.ink}`, marginBottom: 28,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+            <h2 style={{
+              margin: 0, fontFamily: T.display, fontSize: 18, fontWeight: 700,
+              letterSpacing: -0.3, color: T.ink,
+            }}>Каталог</h2>
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
+              {filtered.length} {filtered.length === 1 ? 'книга' : 'книг'}
             </span>
           </div>
-        </div>
-        <button
-          onClick={() => { setMode(mode === 'search' ? 'browse' : 'search'); if (mode === 'search') handleReset() }}
-          style={{
-            padding: '7px 16px', borderRadius: 20, border: `1px solid ${GOLD}`,
-            background: mode === 'search' ? GOLD : 'transparent',
-            color: mode === 'search' ? '#1a1000' : GOLD,
-            fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            transition: 'all 0.15s', letterSpacing: '0.02em',
-          }}
-        >
-          {mode === 'search'
-            ? (lang === 'ru' ? '← Каталог' : '← Browse')
-            : (lang === 'ru' ? 'По настроению' : 'By mood')}
-        </button>
-      </div>
-
-      {/* Hero */}
-      <div style={{
-        padding: 'clamp(48px,7vw,100px) clamp(24px,4vw,60px)',
-        borderBottom: `1px solid ${BORDER}`,
-        position: 'relative', overflow: 'hidden',
-      }}>
-        {/* Блобы */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute', width: 500, height: 500, borderRadius: '50%',
-            background: `radial-gradient(circle, ${GOLD}35 0%, transparent 70%)`,
-            top: -180, right: -100, filter: 'blur(60px)',
-            animation: 'blob1 22s ease-in-out infinite',
-          }} />
-          <div style={{
-            position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-            background: isDark
-              ? 'radial-gradient(circle, rgba(80,50,20,0.6) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(201,150,60,0.18) 0%, transparent 70%)',
-            bottom: -120, left: -80, filter: 'blur(50px)',
-            animation: 'blob2 28s ease-in-out infinite',
-          }} />
-        </div>
-        {/* Фоновая текстура — линейки */}
-        <div style={{
-          position: 'absolute', inset: 0, opacity: isDark ? 0.025 : 0.05,
-          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 28px, ${GOLD} 28px, ${GOLD} 29px)`,
-          pointerEvents: 'none',
-        }} />
-
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.2em',
-            textTransform: 'uppercase', color: GOLD, marginBottom: 20,
-          }}>
-            {lang === 'ru' ? 'Эмоциональный поиск' : 'Emotional discovery'}
-          </p>
-          <h1 style={{
-            fontSize: 'clamp(48px, 8vw, 120px)',
-            fontWeight: 900,
-            letterSpacing: '-0.04em',
-            lineHeight: 0.9,
-            color: TEXT,
-            marginBottom: 'clamp(20px, 3vw, 40px)',
-          }}>
-            {lang === 'ru' ? 'Читай.\nЧувствуй.' : 'Read.\nFeel.'}
-          </h1>
-          <p style={{ fontSize: 15, color: HINT, lineHeight: 1.7, maxWidth: '46ch', marginBottom: 28 }}>
-            {lang === 'ru'
-              ? 'Не рейтинги и рецензии — а эмоции. Что ты чувствовал до и после. Найди книгу под своё настроение.'
-              : 'Not ratings or reviews — emotions. What you felt before and after. Find a book for your mood.'}
-          </p>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            {books.length > 0 && (
-              <>
-                <span style={{
-                  fontSize: 11, padding: '5px 12px', borderRadius: 20,
-                  border: `1px solid ${BORDER}`,
-                  color: HINT, fontWeight: 600, letterSpacing: '0.04em',
-                }}>
-                  ◉ {books.length}{lang === 'ru' ? ' книг' : ' books'}
-                </span>
-                <span style={{
-                  fontSize: 11, padding: '5px 12px', borderRadius: 20,
-                  border: `1px solid ${BORDER}`,
-                  color: HINT, fontWeight: 600, letterSpacing: '0.04em',
-                }}>
-                  ♥ {books.reduce((s, b) => s + (b._count?.reviews ?? 0), 0)}{lang === 'ru' ? ' отзывов' : ' reviews'}
-                </span>
-              </>
-            )}
+          {query && (
             <button
-              onClick={() => { setMode('search'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              onClick={() => setQuery('')}
               style={{
-                padding: '10px 24px', borderRadius: 24,
-                border: 'none',
-                background: GOLD,
-                color: '#1a1000',
-                fontSize: 13, fontWeight: 800, cursor: 'pointer',
-                letterSpacing: '0.01em',
-                boxShadow: `0 4px 24px ${GOLD}50`,
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 12, color: T.inkMute, fontFamily: T.sans,
               }}
-            >
-              {lang === 'ru' ? 'Найти по настроению →' : 'Find by mood →'}
-            </button>
+            >сбросить ×</button>
+          )}
+        </div>
+
+        {loading ? (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+            gap: '28px 20px',
+          }}>
+            {Array.from({ length: 15 }).map((_, i) => <BookSkeleton key={i} />)}
           </div>
-        </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: '60px 0', textAlign: 'center' }}>
+            <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 20 }}>
+              ⁕ {query ? 'ничего не найдено' : 'книг пока нет'}
+            </p>
+            <button onClick={() => navigate('/add')} style={{
+              background: T.ink, color: T.paper, border: 'none',
+              padding: '10px 24px', fontSize: 13, cursor: 'pointer',
+              fontFamily: T.sans, borderRadius: 3,
+            }}>Добавить книгу →</button>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+            gap: '28px 20px',
+          }}>
+            {filtered.map(book => (
+              <BookCard
+                key={book.id} book={book}
+                onClick={() => navigate(`/film/${book.id}`)}
+              />
+            ))}
+          </div>
+        )}
+
+        <div ref={sentinelRef} style={{ height: 1 }} />
+
+        {loadingMore && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+            gap: '28px 20px', marginTop: 28,
+          }}>
+            {Array.from({ length: 6 }).map((_, i) => <BookSkeleton key={i} />)}
+          </div>
+        )}
+
+        {!loading && !loadingMore && !hasMore && books.length > 0 && (
+          <div style={{
+            textAlign: 'center', padding: '32px 0',
+            fontFamily: T.mono, fontSize: 11, color: T.inkMute,
+          }}>⁕ все книги загружены</div>
+        )}
       </div>
-
-      {/* Бегущая строка */}
-      <BookMarquee gold={GOLD} hint={HINT} />
-
-      {/* Поиск по настроению */}
-      {mode === 'search' && (
-        <div style={{ padding: '24px 20px 0', background: BG }}>
-          <p style={{ fontSize: 13, color: HINT, marginBottom: 20, letterSpacing: '0.02em' }}>
-            {lang === 'ru' ? 'Выбери ощущения — подберём книги' : 'Pick feelings — we\'ll find books'}
-          </p>
-          <TagPicker label={lang === 'ru' ? 'Моё настроение' : 'My mood'} tags={MOOD_BEFORE_TAGS} selected={moodBefore} onChange={setMoodBefore} />
-          <TagPicker label={lang === 'ru' ? 'Хочу почувствовать' : 'I want to feel'} tags={EFFECT_AFTER_TAGS} selected={effectAfter} onChange={setEffectAfter} />
-          <TagPicker label={lang === 'ru' ? 'Атмосфера' : 'Atmosphere'} tags={ATMOSPHERE_TAGS} selected={atmosphere} onChange={setAtmosphere} />
-          <button
-            onClick={handleSearch}
-            disabled={!hasFilters || searchLoading}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-              background: hasFilters ? GOLD : `${GOLD}20`,
-              color: hasFilters ? '#1a1000' : HINT,
-              fontSize: 15, fontWeight: 700, cursor: hasFilters ? 'pointer' : 'default',
-              marginBottom: 28,
-              boxShadow: hasFilters ? `0 4px 20px ${GOLD}40` : 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            {searchLoading ? '...' : (lang === 'ru' ? 'Найти книгу' : 'Find a book')}
-          </button>
-
-          {searchResults !== null && (
-            searchResults.length > 0 ? (
-              <>
-                <p style={{ fontSize: 11, color: HINT, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 20 }}>
-                  {fmtResults(searchResults.length, lang)} — {lang === 'ru' ? 'по совпадению' : 'by relevance'}
-                </p>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                  gap: '24px 16px',
-                  paddingBottom: 24,
-                }}>
-                  {searchResults.map((book) => (
-                    <BookCard key={book.id} book={book} onClick={() => navigate(`/film/${book.id}`)} />
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <p style={{ fontSize: 32, marginBottom: 12, opacity: 0.3 }}>◉</p>
-                <p style={{ fontSize: 15, color: HINT, lineHeight: 1.5 }}>
-                  {lang === 'ru' ? 'Ничего не нашли — попробуй убрать часть фильтров' : 'Nothing found — try fewer filters'}
-                </p>
-              </div>
-            )
-          )}
-        </div>
-      )}
-
-      {/* Каталог */}
-      {mode === 'browse' && (
-        <div style={{ padding: '28px 20px 0' }}>
-          {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '24px 16px' }}>
-              {Array.from({ length: 12 }).map((_, i) => <BookSkeleton key={i} />)}
-            </div>
-          ) : books.length === 0 ? (
-            <div style={{ padding: '60px 32px', textAlign: 'center' }}>
-              <p style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>◉</p>
-              <p style={{ color: HINT, fontSize: 15, lineHeight: 1.5, marginBottom: 20 }}>
-                {lang === 'ru' ? 'Пока нет книг' : 'No books yet'}
-              </p>
-              <button onClick={() => navigate('/add')} style={{
-                padding: '12px 32px', borderRadius: 24, border: 'none',
-                background: GOLD, color: '#1a1000', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-              }}>
-                {lang === 'ru' ? 'Добавить книгу' : 'Add a book'}
-              </button>
-            </div>
-          ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-              gap: '24px 16px',
-            }}>
-              {books.map((book, i) => (
-                <div
-                  key={book.id}
-                  className="reveal-item"
-                  style={{ animationDelay: `${Math.min(i * 0.04, 0.5)}s` }}
-                >
-                  <BookCard book={book} onClick={() => navigate(`/film/${book.id}`)} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div ref={sentinelRef} style={{ height: 1 }} />
-
-          {loadingMore && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '24px 16px', paddingTop: 24 }}>
-              {Array.from({ length: 6 }).map((_, i) => <BookSkeleton key={i} />)}
-            </div>
-          )}
-
-          {!loading && !loadingMore && !hasMore && books.length > 0 && (
-            <p style={{ textAlign: 'center', color: HINT, fontSize: 12, padding: '24px 0 12px' }}>◉</p>
-          )}
-        </div>
-      )}
     </div>
   )
 }
