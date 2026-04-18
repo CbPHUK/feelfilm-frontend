@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { MOOD_BEFORE_TAGS, EFFECT_AFTER_TAGS, ATMOSPHERE_TAGS } from '../constants/emotions'
+import { VIEWER_TYPES } from '../constants/viewerTypes'
 import type { Film } from '../types'
 
 const T = {
@@ -107,6 +108,10 @@ export function SearchPage() {
   const [atmosphere, setAtmosphere] = useState<string[]>([])
   const [showEffect, setShowEffect] = useState(!!initEffect)
   const [showAtmosphere, setShowAtmosphere] = useState(false)
+  const [showViewerType, setShowViewerType] = useState(false)
+  const [viewerType, setViewerType] = useState<string>(
+    () => localStorage.getItem('ff_viewer_type') ?? ''
+  )
   const [results, setResults] = useState<Film[] | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -237,6 +242,61 @@ export function SearchPage() {
             />
           </div>
         )}
+
+        {/* Кто ты — collapsible */}
+        <div style={{ marginBottom: 28 }}>
+          <button
+            onClick={() => setShowViewerType(v => !v)}
+            style={{
+              background: 'none', border: `1px dashed ${T.rule}`,
+              color: T.inkMute, fontSize: 12, cursor: 'pointer',
+              padding: '10px 16px', fontFamily: T.sans,
+              borderRadius: 3, display: 'flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <span>{showViewerType ? '▲' : '▼'}</span>
+            {viewerType
+              ? `ты — ${viewerType}`
+              : '+ кто ты как зритель?'}
+          </button>
+
+          {showViewerType && (
+            <div style={{
+              marginTop: 12,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+              gap: 8,
+            }}>
+              {VIEWER_TYPES.map(vt => (
+                <button
+                  key={vt.id}
+                  onClick={() => {
+                    const next = viewerType === vt.id ? '' : vt.id
+                    setViewerType(next)
+                    localStorage.setItem('ff_viewer_type', next)
+                  }}
+                  style={{
+                    padding: '12px 14px',
+                    border: `1px solid ${viewerType === vt.id ? T.ink : T.rule}`,
+                    background: viewerType === vt.id ? T.ink : 'transparent',
+                    color: viewerType === vt.id ? T.paper : T.inkSoft,
+                    fontSize: 13, cursor: 'pointer', borderRadius: 3,
+                    fontFamily: T.sans, textAlign: 'left',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: 2 }}>
+                    {vt.symbol} {vt.id}
+                  </div>
+                  <div style={{
+                    fontSize: 11, lineHeight: 1.3,
+                    color: viewerType === vt.id ? 'rgba(233,226,207,0.7)' : T.inkMute,
+                  }}>{vt.desc}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Find button */}
         <button
