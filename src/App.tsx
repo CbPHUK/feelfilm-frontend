@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
-import { ThemeProvider } from './contexts/ThemeContext'
-import { LangProvider, useLang } from './contexts/LangContext'
+import { LangProvider } from './contexts/LangContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { AuthModalContext } from './contexts/AuthModalContext'
-import { useTheme } from './contexts/ThemeContext'
 import { NavBar } from './components/NavBar'
-import { Logo } from './components/Logo'
 import { AuthPage } from './pages/AuthPage'
 import { WelcomePage } from './pages/WelcomePage'
 import { FeedPage } from './pages/FeedPage'
@@ -20,115 +17,130 @@ import { WorkPage } from './pages/WorkPage'
 import { LibraryPage } from './pages/LibraryPage'
 import { api } from './api/client'
 
-function SidebarSettings() {
-  const { theme, toggle } = useTheme()
-  const { lang, setLang } = useLang()
-  const isDark = theme === 'dark'
-  return (
-    <div style={{
-      marginTop: 12, padding: '12px 14px',
-      borderRadius: 'var(--r-md)',
-      border: '1px solid var(--glass-border)',
-      background: 'var(--glass-bg)',
-      display: 'flex', flexDirection: 'column', gap: 10,
-    }}>
-      {/* Тема */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 12, color: 'var(--text-hint)' }}>{isDark ? 'Тёмная' : 'Светлая'}</span>
-        <button
-          onClick={toggle}
-          style={{
-            width: 36, height: 20, borderRadius: 10,
-            background: isDark ? 'var(--coral)' : 'rgba(160,145,132,0.25)',
-            border: 'none', cursor: 'pointer', position: 'relative',
-            transition: 'background 0.2s', padding: 0, flexShrink: 0,
-          }}
-        >
-          <span style={{
-            position: 'absolute', top: 2,
-            left: isDark ? 18 : 2,
-            width: 16, height: 16, borderRadius: '50%',
-            background: '#fff',
-            transition: 'left 0.2s',
-            display: 'block',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-          }} />
-        </button>
-      </div>
-      {/* Язык */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 12, color: 'var(--text-hint)' }}>Язык / Lang</span>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {(['ru', 'en'] as const).map((l) => (
-            <button key={l} onClick={() => setLang(l)} style={{
-              padding: '2px 10px', borderRadius: 'var(--r-pill)',
-              border: '1px solid var(--glass-border)',
-              background: lang === l ? 'var(--coral)' : 'transparent',
-              color: lang === l ? '#fff' : 'var(--text-hint)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}>{l.toUpperCase()}</button>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+// ── Design tokens (shared) ──────────────────────────────────────
+const T = {
+  paper:   '#e9e2cf',
+  ink:     '#1b1d2a',
+  inkSoft: 'rgba(27,29,42,0.62)',
+  inkMute: 'rgba(27,29,42,0.45)',
+  rule:    'rgba(27,29,42,0.18)',
+  ruleSoft:'rgba(27,29,42,0.10)',
+  red:     '#d64026',
+  mono:    '"JetBrains Mono", ui-monospace, monospace',
+  display: '"Unbounded", "Inter", sans-serif',
+  sans:    '"Inter", -apple-system, system-ui, sans-serif',
 }
 
-function Sidebar() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { t } = useLang()
+function todayLabel(): string {
+  const d = new Date()
+  const days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(2)
+  return `${days[d.getDay()]} · ${dd}.${mm}.${yy}`
+}
 
-  const tabs = [
-    { path: '/',         icon: '▦', label: t.feed },
-    { path: '/library',  icon: '◉', label: 'Каталог' },
-    { path: '/search',   icon: '◎', label: t.search },
-    { path: '/add',      icon: '✦', label: t.share },
-    { path: '/profile',  icon: '◈', label: t.profile },
+// ── Global TopBar ───────────────────────────────────────────────
+function TopBar({ onWrite }: { onWrite: () => void }) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const name = localStorage.getItem('ff_display_name') ?? ''
+  const token = localStorage.getItem('ff_token')
+
+  const nav = [
+    { l: 'лента',    path: '/' },
+    { l: 'поиск',    path: '/search' },
+    { l: 'каталог',  path: '/library' },
+    { l: 'профиль',  path: '/profile' },
   ]
 
   return (
-    <aside className="app-sidebar">
-      <div style={{ marginBottom: 32, paddingLeft: 8 }}>
-        <Logo size={28} withText />
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: T.paper, borderBottom: `1px solid ${T.ink}`,
+    }}>
+      {/* meta strip */}
+      <div style={{
+        padding: '5px 40px', display: 'flex', justifyContent: 'space-between',
+        fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute,
+        textTransform: 'uppercase', borderBottom: `1px solid ${T.ruleSoft}`,
+      }}>
+        <span className="topbar-meta-hide">{todayLabel()}</span>
+        <span>フィールフィルム · эмоциональный журнал кино</span>
+        <span className="topbar-meta-hide">ru</span>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {tabs.map((tab) => {
-          const active = location.pathname === tab.path
-          return (
+      {/* main nav */}
+      <div style={{
+        padding: '10px 40px',
+        display: 'grid', gridTemplateColumns: 'auto 1fr auto',
+        alignItems: 'center', gap: 24,
+      }}>
+        {/* logo */}
+        <div
+          onClick={() => navigate('/')}
+          style={{ display: 'flex', alignItems: 'baseline', gap: 8, cursor: 'pointer' }}
+        >
+          <div style={{
+            fontFamily: T.display, fontSize: 18, fontWeight: 800,
+            letterSpacing: -0.6, lineHeight: 1, color: T.ink,
+          }}>
+            FeelFilm<span style={{ color: T.red }}>.</span>
+          </div>
+          <span style={{
+            fontFamily: T.mono, fontSize: 9, color: T.inkMute, letterSpacing: 1.2,
+            textTransform: 'uppercase',
+          }} className="topbar-meta-hide">v.4 · 2026</span>
+        </div>
+
+        {/* nav links */}
+        <nav style={{ display: 'flex', gap: 20, justifyContent: 'center' }} className="topbar-nav">
+          {nav.map(n => (
             <button
-              key={tab.path}
-              onClick={() => navigate(tab.path)}
+              key={n.l}
+              onClick={() => navigate(n.path)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                width: '100%', padding: '11px 14px',
-                borderRadius: 'var(--r-md)', border: 'none',
-                background: active ? 'rgba(208,112,106,0.12)' : 'transparent',
-                cursor: 'pointer', textAlign: 'left',
-                transition: 'background 0.15s',
+                fontSize: 13,
+                color: pathname === n.path ? T.ink : T.inkSoft,
+                fontWeight: pathname === n.path ? 600 : 400,
+                paddingBottom: 2, background: 'none', border: 'none',
+                borderBottom: `2px solid ${pathname === n.path ? T.red : 'transparent'}`,
+                cursor: 'pointer', fontFamily: T.sans,
               }}
-              onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(160,145,132,0.10)' }}
-              onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
             >
-              <span style={{ fontSize: 17, color: active ? 'var(--coral)' : 'var(--text-hint)', width: 20, textAlign: 'center' }}>
-                {tab.icon}
-              </span>
-              <span style={{
-                fontSize: 14, fontWeight: active ? 600 : 400,
-                color: active ? 'var(--coral)' : 'var(--text-secondary)',
-              }}>
-                {tab.label}
-              </span>
+              {n.l}
             </button>
-          )
-        })}
-      </div>
+          ))}
+        </nav>
 
-      {/* Настройки внизу сайдбара */}
-      <SidebarSettings />
-    </aside>
+        {/* actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={onWrite}
+            className="topbar-write-btn"
+            style={{
+              background: 'transparent', border: `1px solid ${T.rule}`,
+              padding: '6px 12px', fontSize: 12, color: T.inkSoft,
+              fontFamily: T.sans, cursor: 'pointer', borderRadius: 3,
+            }}
+          >
+            + написать отзыв
+          </button>
+          {token && name && (
+            <div
+              onClick={() => navigate('/profile')}
+              style={{
+                width: 30, height: 30, borderRadius: '50%', background: T.ink,
+                color: T.paper, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              {name[0]?.toUpperCase()}
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
   )
 }
 
@@ -136,72 +148,6 @@ function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return null
-}
-
-function BgBlobs() {
-  return (
-    <>
-      <div className="bg-blobs">
-        <div className="blob blob-1" />
-        <div className="blob blob-2" />
-        <div className="blob blob-3" />
-      </div>
-      {/* Японские линии */}
-      <div className="jp-lines" />
-      {/* Scan-lines */}
-      <div className="scan-lines" />
-      {/* Плёночные засветы */}
-      <div className="light-leak light-leak-1" />
-      <div className="light-leak light-leak-2" />
-      <div className="light-leak light-leak-3" />
-    </>
-  )
-}
-
-function Footer() {
-  const navigate = useNavigate()
-  return (
-    <footer style={{
-      padding: '24px 20px',
-      borderTop: '1px solid var(--glass-border)',
-      marginTop: 32,
-      display: 'flex', flexWrap: 'wrap', gap: 8,
-      alignItems: 'center', justifyContent: 'space-between',
-    }}>
-      <div>
-        <p style={{ fontSize: 11, color: 'var(--text-hint)' }}>© 2026 FeelFilm</p>
-        <p style={{ fontSize: 10, color: 'var(--text-hint)', opacity: 0.6, marginTop: 2 }}>
-          Data from{' '}
-          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer"
-            style={{ color: 'var(--text-hint)', textDecoration: 'underline' }}>
-            TMDB
-          </a>
-          {' '}& MyAnimeList
-        </p>
-      </div>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button
-          onClick={() => navigate('/privacy')}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontSize: 11, color: 'var(--text-hint)', fontFamily: 'inherit',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--coral)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-hint)' }}
-        >
-          Политика конфиденциальности
-        </button>
-        <a
-          href="mailto:feelfilm.app@gmail.com"
-          style={{ fontSize: 11, color: 'var(--text-hint)', textDecoration: 'none' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--coral)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-hint)' }}
-        >
-          Обратная связь
-        </a>
-      </div>
-    </footer>
-  )
 }
 
 type AppScreen = 'welcome' | 'auth' | 'main'
@@ -216,12 +162,12 @@ function AppInner() {
     return 'welcome'
   })
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     window.Telegram?.WebApp?.ready()
     window.Telegram?.WebApp?.expand()
 
-    // Авто-вход для Telegram Mini App
     const initData = window.Telegram?.WebApp?.initData
     if (initData && !localStorage.getItem('ff_token')) {
       api.auth.telegram()
@@ -240,6 +186,15 @@ function AppInner() {
     localStorage.setItem('ff_visited', '1')
     setScreen('main')
     setShowAuthModal(false)
+  }
+
+  const handleWrite = () => {
+    const token = localStorage.getItem('ff_token')
+    if (!token) {
+      setShowAuthModal(true)
+    } else {
+      navigate('/add')
+    }
   }
 
   if (screen === 'welcome') {
@@ -262,34 +217,29 @@ function AppInner() {
     <AuthModalContext.Provider value={{ openAuthModal: () => setShowAuthModal(true) }}>
       <>
         <ScrollToTop />
-        <BgBlobs />
         <div className="app-layout">
-          <Sidebar />
-          <div className="app-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <div style={{ flex: 1 }}>
-              <Routes>
-                <Route path="/"         element={<><FeedPage /><NavBar /></>} />
-                <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
-                <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
-                <Route path="/library"   element={<><LibraryPage /><NavBar /></>} />
-                <Route path="/film/:id" element={<FilmPage />} />
-                <Route path="/work/:id" element={<WorkPage />} />
-                <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
-                <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
-                <Route path="/privacy"  element={<PrivacyPage />} />
-              </Routes>
-            </div>
-            <Footer />
+          <TopBar onWrite={handleWrite} />
+          <div className="app-main">
+            <Routes>
+              <Route path="/"         element={<><FeedPage /><NavBar /></>} />
+              <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
+              <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
+              <Route path="/library"  element={<><LibraryPage /><NavBar /></>} />
+              <Route path="/film/:id" element={<FilmPage />} />
+              <Route path="/work/:id" element={<WorkPage />} />
+              <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
+              <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
+              <Route path="/privacy"  element={<PrivacyPage />} />
+            </Routes>
           </div>
         </div>
 
-        {/* Модал авторизации */}
+        {/* Auth modal */}
         {showAuthModal && (
           <div
             style={{
               position: 'fixed', inset: 0, zIndex: 1000,
-              background: 'rgba(0,0,0,0.75)',
-              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              background: 'rgba(27,29,42,0.65)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               padding: '20px',
             }}
@@ -297,18 +247,20 @@ function AppInner() {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              style={{ width: '100%', maxWidth: 420, position: 'relative' }}
+              style={{
+                width: '100%', maxWidth: 420, position: 'relative',
+                background: T.paper, border: `1px solid ${T.ink}`,
+                borderRadius: 4,
+              }}
             >
               <button
                 onClick={() => setShowAuthModal(false)}
                 style={{
-                  position: 'absolute', top: -14, right: -14, zIndex: 10,
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: 'var(--glass-bg-heavy)',
-                  border: '1px solid var(--glass-border)',
-                  color: 'var(--text-secondary)', fontSize: 20,
+                  position: 'absolute', top: 12, right: 12, zIndex: 10,
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: 'transparent', border: `1px solid ${T.rule}`,
+                  color: T.inkSoft, fontSize: 16,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  lineHeight: 1, fontWeight: 300,
                 }}
               >×</button>
               <AuthPage onDone={handleAuthDone} modal />
@@ -323,13 +275,11 @@ function AppInner() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <LangProvider>
-          <ToastProvider>
-            <AppInner />
-          </ToastProvider>
-        </LangProvider>
-      </ThemeProvider>
+      <LangProvider>
+        <ToastProvider>
+          <AppInner />
+        </ToastProvider>
+      </LangProvider>
     </BrowserRouter>
   )
 }

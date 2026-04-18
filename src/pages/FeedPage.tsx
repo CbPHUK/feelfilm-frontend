@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Entry } from '../types'
 
@@ -29,15 +29,6 @@ function timeAgo(dateStr: string): string {
   if (diff < 86400 * 2) return 'вчера'
   if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} дн. назад`
   return new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-}
-
-function todayLabel(): string {
-  const d = new Date()
-  const days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yy = String(d.getFullYear()).slice(2)
-  return `${days[d.getDay()]} · ${dd}.${mm}.${yy}`
 }
 
 const WORK_TYPE_LABEL: Record<string, string> = {
@@ -80,106 +71,6 @@ function Emo({ w, kind = 'neutral', size = 'md', active, onClick }: EmoProps) {
     >
       {w}
     </span>
-  )
-}
-
-// ── TopBar ─────────────────────────────────────────────────────
-function TopBar({ onWrite }: { onWrite: () => void }) {
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const token = localStorage.getItem('ff_token')
-  const name = localStorage.getItem('ff_display_name') ?? ''
-  const nav = [
-    { l: 'лента',   path: '/' },
-    { l: 'поиск',   path: '/search' },
-    { l: 'каталог', path: '/library' },
-    { l: 'профиль', path: '/profile' },
-  ]
-  return (
-    <header style={{
-      position: 'sticky', top: 0, zIndex: 20,
-      background: T.paper, borderBottom: `1px solid ${T.ink}`,
-    }}>
-      {/* meta strip */}
-      <div style={{
-        padding: '6px 40px', display: 'flex', justifyContent: 'space-between',
-        fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute,
-        textTransform: 'uppercase', borderBottom: `1px solid ${T.ruleSoft}`,
-      }}>
-        <span>{todayLabel()}</span>
-        <span>フィールフィルム · эмоциональный журнал кино</span>
-        <span>ru</span>
-      </div>
-      {/* main nav */}
-      <div style={{
-        padding: '12px 40px',
-        display: 'grid', gridTemplateColumns: 'auto 1fr auto',
-        alignItems: 'center', gap: 32,
-      }}>
-        {/* logo */}
-        <div
-          onClick={() => navigate('/')}
-          style={{ display: 'flex', alignItems: 'baseline', gap: 10, cursor: 'pointer' }}
-        >
-          <div style={{
-            fontFamily: T.display, fontSize: 20, fontWeight: 800,
-            letterSpacing: -0.6, lineHeight: 1, color: T.ink,
-          }}>
-            FeelFilm<span style={{ color: T.red }}>.</span>
-          </div>
-          <span style={{
-            fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.2,
-            textTransform: 'uppercase',
-          }}>v. 4 · 2026</span>
-        </div>
-
-        {/* nav links */}
-        <nav style={{ display: 'flex', gap: 22, justifyContent: 'center' }}>
-          {nav.map(n => (
-            <button
-              key={n.l}
-              onClick={() => navigate(n.path)}
-              style={{
-                fontSize: 13, color: pathname === n.path ? T.ink : T.inkSoft,
-                fontWeight: pathname === n.path ? 600 : 400,
-                paddingBottom: 2, background: 'none',
-                border: 'none',
-                borderBottom: `2px solid ${pathname === n.path ? T.red : 'transparent'}`,
-                cursor: 'pointer', fontFamily: T.sans,
-              }}
-            >
-              {n.l}
-            </button>
-          ))}
-        </nav>
-
-        {/* right: write + avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={onWrite}
-            style={{
-              background: 'transparent', border: `1px solid ${T.rule}`,
-              padding: '7px 12px', fontSize: 12, color: T.inkSoft,
-              fontFamily: T.sans, cursor: 'pointer', borderRadius: 3,
-            }}
-          >
-            + написать отзыв
-          </button>
-          {token && name && (
-            <div
-              onClick={() => navigate('/profile')}
-              style={{
-                width: 32, height: 32, borderRadius: '50%', background: T.ink,
-                color: T.paper, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
-              }}
-            >
-              {name[0]?.toUpperCase()}
-            </div>
-          )}
-        </div>
-      </div>
-    </header>
   )
 }
 
@@ -533,14 +424,7 @@ export function FeedPage() {
   const toggleAfter = (w: string) =>
     setAfterSel(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])
 
-  const handleSearch = () => {
-    // navigate to search page with emotion params if selected
-    if (beforeSel.length > 0 || afterSel.length > 0) {
-      navigate('/search')
-    }
-  }
-
-  const handleWrite = () => navigate('/add')
+  const handleSearch = () => navigate('/search')
 
   // client-side mood filter on top of type filter
   const displayed = entries.filter(e => {
@@ -553,13 +437,7 @@ export function FeedPage() {
   })
 
   return (
-    <div style={{
-      minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans,
-      // override parent layout background
-      margin: '-0px',
-    }}>
-      <TopBar onWrite={handleWrite} />
-
+    <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans }}>
       <main style={{
         maxWidth: 1200, margin: '0 auto', padding: '24px 32px 60px',
         display: 'grid', gridTemplateColumns: '200px 1fr 280px', gap: 28,
@@ -617,7 +495,7 @@ export function FeedPage() {
                 ⁕ записей пока нет
               </p>
               <button
-                onClick={handleWrite}
+                onClick={() => navigate('/add')}
                 style={{
                   background: T.ink, color: T.paper, border: 'none',
                   padding: '10px 24px', fontSize: 13, cursor: 'pointer',
@@ -689,7 +567,7 @@ export function FeedPage() {
             )}
 
             <button
-              onClick={handleWrite}
+              onClick={() => navigate('/add')}
               style={{
                 background: T.ink, color: T.paper, border: 'none',
                 padding: '9px 12px', fontSize: 12, fontWeight: 500,

@@ -1,68 +1,76 @@
 /* ─── Светлая тема (default) ─── */
 :root,
 [data-theme="light"] {
-  --bg:              #EAE4DA;
-  --bg-deep:         #DDD6CB;
+  /* Paper/ink editorial palette */
+  --bg:              #e9e2cf;
+  --bg-deep:         #ddd3bb;
+  --bg-outer:        #d9d2bf;
 
-  --coral:           #D0706A;
-  --coral-light:     rgba(208, 112, 106, 0.15);
-  --coral-muted:     rgba(208, 112, 106, 0.11);
+  --coral:           #d64026;
+  --coral-light:     rgba(214, 64, 38, 0.12);
+  --coral-muted:     rgba(214, 64, 38, 0.08);
 
-  --teal:            #6B9DAA;
-  --teal-light:      rgba(107, 157, 170, 0.15);
-  --teal-muted:      rgba(107, 157, 170, 0.11);
+  --teal:            #2b4fc2;
+  --teal-light:      rgba(43, 79, 194, 0.12);
+  --teal-muted:      rgba(43, 79, 194, 0.08);
 
-  --text:            #38302A;
-  --text-secondary:  #6B5E54;
-  --text-hint:       #A09184;
+  --text:            #1b1d2a;
+  --text-secondary:  rgba(27,29,42,0.62);
+  --text-hint:       rgba(27,29,42,0.45);
 
-  /* Усиленное стекло */
-  --glass-bg:        rgba(255, 252, 248, 0.52);
-  --glass-bg-heavy:  rgba(255, 252, 248, 0.86);
-  --glass-border:    rgba(255, 255, 255, 0.70);
-  --glass-hi:        rgba(255, 255, 255, 0.90);  /* highlight верхней грани */
-  --glass-shadow:    0 8px 40px rgba(60, 40, 30, 0.12), inset 0 1px 0 rgba(255,255,255,0.80);
-  --glass-shadow-sm: 0 2px 16px rgba(60, 40, 30, 0.08), inset 0 1px 0 rgba(255,255,255,0.70);
+  /* Editorial borders & surfaces */
+  --glass-bg:        #efe7d2;
+  --glass-bg-heavy:  #e9e2cf;
+  --glass-border:    rgba(27,29,42,0.18);
+  --glass-hi:        rgba(255,255,255,0.60);
+  --glass-shadow:    0 2px 12px rgba(27,29,42,0.10);
+  --glass-shadow-sm: 0 1px 6px rgba(27,29,42,0.07);
 
-  --header-bg:       rgba(234, 228, 218, 0.78);
+  --header-bg:       #e9e2cf;
 
-  --r-sm:   8px;
-  --r-md:   14px;
-  --r-lg:   20px;
-  --r-xl:   28px;
-  --r-pill: 999px;
+  --r-sm:   3px;
+  --r-md:   3px;
+  --r-lg:   3px;
+  --r-xl:   4px;
+  --r-pill: 3px;
 
-  /* Блобы — светлая тема */
-  --blob-opacity: 0.55;
+  --blob-opacity: 0;
 }
 
 /* ─── Тёмная тема ─── */
 [data-theme="dark"] {
-  --bg:              #1A1614;
-  --bg-deep:         #141210;
+  --bg:              #1e1c17;
+  --bg-deep:         #16140f;
+  --bg-outer:        #12110d;
 
-  --coral:           #D4706A;
-  --coral-light:     rgba(212, 112, 106, 0.20);
-  --coral-muted:     rgba(212, 112, 106, 0.14);
+  --coral:           #e04e30;
+  --coral-light:     rgba(224, 78, 48, 0.15);
+  --coral-muted:     rgba(224, 78, 48, 0.10);
 
-  --teal:            #6B9DAA;
-  --teal-light:      rgba(107, 157, 170, 0.20);
-  --teal-muted:      rgba(107, 157, 170, 0.14);
+  --teal:            #4a6fd4;
+  --teal-light:      rgba(74, 111, 212, 0.15);
+  --teal-muted:      rgba(74, 111, 212, 0.10);
 
-  --text:            #EDE8DF;
-  --text-secondary:  #A8998A;
-  --text-hint:       #6A5E52;
+  --text:            #e8e2d4;
+  --text-secondary:  rgba(232,226,212,0.65);
+  --text-hint:       rgba(232,226,212,0.40);
 
-  --glass-bg:        rgba(40, 34, 28, 0.68);
-  --glass-bg-heavy:  rgba(30, 25, 20, 0.92);
-  --glass-border:    rgba(255, 255, 255, 0.09);
-  --glass-hi:        rgba(255, 255, 255, 0.06);
-  --glass-shadow:    0 8px 40px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.07);
-  --glass-shadow-sm: 0 2px 16px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.05);
+  --glass-bg:        rgba(38,34,24,0.80);
+  --glass-bg-heavy:  rgba(28,26,18,0.95);
+  --glass-border:    rgba(232,226,212,0.14);
+  --glass-hi:        rgba(255,255,255,0.05);
+  --glass-shadow:    0 2px 12px rgba(0,0,0,0.35);
+  --glass-shadow-sm: 0 1px 6px rgba(0,0,0,0.25);
 
-  --header-bg:       rgba(26, 22, 18, 0.80);
+  --header-bg:       #1e1c17;
 
-  --blob-opacity: 0.28;
+  --r-sm:   3px;
+  --r-md:   3px;
+  --r-lg:   3px;
+  --r-xl:   4px;
+  --r-pill: 3px;
+
+  --blob-opacity: 0;
 }
 
 /* ─── Reset ─── */
@@ -75,7 +83,7 @@
 html, body, #root { min-height: 100vh; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-overflow-scrolling: touch;
@@ -216,14 +224,15 @@ body::after {
   --space-card:    clamp(12px, 1.5vw, 20px);
 }
 
-/* ─── Desktop layout ─── */
+/* ─── Layout ─── */
 .app-layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
 .app-sidebar {
-  display: none;
+  display: none; /* removed — TopBar handles nav */
 }
 
 .app-main {
@@ -231,31 +240,20 @@ body::after {
   min-width: 0;
 }
 
-/* Ограничение ширины контента */
 .content-wrap {
-  max-width: 1080px;
+  max-width: 900px;
   margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ─── TopBar responsive ─── */
+@media (max-width: 768px) {
+  .topbar-nav { display: none !important; }
+  .topbar-meta-hide { display: none !important; }
+  .topbar-write-btn { display: none !important; }
 }
 
 @media (min-width: 769px) {
-  .app-sidebar {
-    display: flex;
-    flex-direction: column;
-    width: 240px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    border-right: 1px solid var(--glass-border);
-    background: var(--glass-bg-heavy);
-    backdrop-filter: blur(32px) saturate(1.4);
-    -webkit-backdrop-filter: blur(32px) saturate(1.4);
-    padding: 32px 20px 24px;
-    gap: 2px;
-    overflow-y: auto;
-    box-shadow: inset -1px 0 0 var(--glass-hi);
-  }
-
   .navbar-mobile { display: none !important; }
 
   .film-grid {

@@ -7,20 +7,19 @@ export function NavBar() {
   const { t } = useLang()
 
   const tabs = [
-    { path: '/',        icon: '▦', label: t.feed },
-    { path: '/library', icon: '◉', label: 'Каталог' },
-    { path: '/search',  icon: '◎', label: t.search },
-    { path: '/add',     icon: '✦', label: t.share },
-    { path: '/profile', icon: '◈', label: t.profile },
+    { path: '/',        label: t.feed },
+    { path: '/search',  label: t.search },
+    { path: '/add',     label: t.share },
+    { path: '/library', label: 'Каталог' },
+    { path: '/profile', label: t.profile },
   ]
 
   return (
     <nav className="navbar-mobile" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
       display: 'flex',
-      background: 'var(--glass-bg-heavy)',
-      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-      borderTop: '1px solid var(--glass-border)',
+      background: '#e9e2cf',
+      borderTop: '1px solid #1b1d2a',
       paddingBottom: 'env(safe-area-inset-bottom)',
       zIndex: 100,
     }}>
@@ -30,29 +29,27 @@ export function NavBar() {
           <button
             key={tab.path}
             onClick={() => navigate(tab.path)}
-            className="hover-nav"
             style={{
               flex: 1, padding: '12px 0 10px',
               background: 'transparent', border: 'none',
               cursor: 'pointer', display: 'flex',
-              flexDirection: 'column', alignItems: 'center', gap: 3,
+              flexDirection: 'column', alignItems: 'center', gap: 2,
               position: 'relative',
+              fontFamily: '"Inter", sans-serif',
             }}
           >
-            <span style={{ fontSize: 18, color: active ? 'var(--coral)' : 'var(--text-hint)', transition: 'color 0.2s' }}>
-              {tab.icon}
-            </span>
             <span style={{
-              fontSize: 9, letterSpacing: '0.05em', textTransform: 'uppercase',
-              color: active ? 'var(--coral)' : 'var(--text-hint)',
-              fontWeight: active ? 600 : 400, transition: 'color 0.2s',
+              fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
+              color: active ? '#d64026' : 'rgba(27,29,42,0.45)',
+              fontWeight: active ? 700 : 400,
             }}>
               {tab.label}
             </span>
             {active && (
               <span style={{
-                position: 'absolute', bottom: 'calc(env(safe-area-inset-bottom) + 1px)',
-                width: 18, height: 2, borderRadius: 1, background: 'var(--coral)',
+                position: 'absolute', top: 0, left: '50%',
+                transform: 'translateX(-50%)',
+                width: 20, height: 2, background: '#d64026',
               }} />
             )}
           </button>
