@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { LangProvider } from './contexts/LangContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { AuthModalContext } from './contexts/AuthModalContext'
@@ -276,11 +277,13 @@ function AppInner() {
 export default function App() {
   return (
     <BrowserRouter>
-      <LangProvider>
-        <ToastProvider>
-          <AppInner />
-        </ToastProvider>
-      </LangProvider>
+      <ThemeProvider>
+        <LangProvider>
+          <ToastProvider>
+            <AppInner />
+          </ToastProvider>
+        </LangProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }
