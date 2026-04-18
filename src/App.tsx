@@ -50,6 +50,7 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
   const nav = [
     { l: 'лента',    path: '/' },
     { l: 'поиск',    path: '/search' },
+    { l: 'книги',    path: '/books' },
     { l: 'каталог',  path: '/library' },
     { l: 'профиль',  path: '/profile' },
   ]

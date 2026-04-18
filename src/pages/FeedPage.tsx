@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Entry } from '../types'
 
-// ── Design tokens (matching FeelFilm.html prototype) ──────────
+// ── Design tokens ──────────────────────────────────────────────
 const T = {
   paper:     '#e9e2cf',
   paperSoft: '#efe7d2',
@@ -20,7 +20,6 @@ const T = {
   sans:      '"Inter", -apple-system, system-ui, sans-serif',
 }
 
-// ── helpers ────────────────────────────────────────────────────
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
   if (diff < 60) return 'только что'
@@ -35,15 +34,13 @@ const WORK_TYPE_LABEL: Record<string, string> = {
   movie: 'фильм', series: 'сериал', anime: 'аниме', book: 'книга',
 }
 
-// ── Emo chip — core atom ───────────────────────────────────────
-interface EmoProps {
-  w: string
-  kind?: 'before' | 'after' | 'neutral'
-  size?: 'sm' | 'md' | 'lg'
-  active?: boolean
-  onClick?: () => void
-}
-function Emo({ w, kind = 'neutral', size = 'md', active, onClick }: EmoProps) {
+// ── Emo chip ───────────────────────────────────────────────────
+function Emo({
+  w, kind = 'neutral', size = 'md', active, onClick,
+}: {
+  w: string; kind?: 'before' | 'after' | 'neutral'
+  size?: 'sm' | 'md' | 'lg'; active?: boolean; onClick?: () => void
+}) {
   const variants = {
     before:      { bg: 'transparent', color: T.red,   border: `1px solid ${T.red}` },
     after:       { bg: 'transparent', color: T.blue,  border: `1px solid ${T.blue}` },
@@ -54,110 +51,123 @@ function Emo({ w, kind = 'neutral', size = 'md', active, onClick }: EmoProps) {
   const v = active
     ? variants[kind === 'before' ? 'beforeSolid' : 'afterSolid']
     : variants[kind]
-  const pad = size === 'sm' ? '2px 8px' : size === 'lg' ? '6px 12px' : '3px 10px'
-  const fs  = size === 'sm' ? 11 : size === 'lg' ? 13 : 12
+  const pad = size === 'sm' ? '3px 10px' : size === 'lg' ? '7px 14px' : '4px 11px'
+  const fs  = size === 'sm' ? 12 : size === 'lg' ? 14 : 13
   return (
-    <span
-      onClick={onClick}
-      style={{
-        display: 'inline-flex', alignItems: 'center',
-        padding: pad, fontSize: fs, lineHeight: 1.2,
-        background: v.bg, color: v.color, border: v.border,
-        borderRadius: 3, fontWeight: 500, letterSpacing: 0.1,
-        fontFamily: T.sans, cursor: onClick ? 'pointer' : 'default',
-        whiteSpace: 'nowrap', userSelect: 'none',
-        transition: 'background 0.12s, color 0.12s',
-      }}
-    >
-      {w}
-    </span>
+    <span onClick={onClick} style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: pad, fontSize: fs, lineHeight: 1.3,
+      background: v.bg, color: v.color, border: v.border,
+      borderRadius: 3, fontWeight: 500,
+      fontFamily: T.sans, cursor: onClick ? 'pointer' : 'default',
+      whiteSpace: 'nowrap', userSelect: 'none',
+      transition: 'background 0.12s, color 0.12s',
+    }}>{w}</span>
   )
 }
 
-// ── MoodSearch ─────────────────────────────────────────────────
-const BEFORE_OPTS = ['скука','пустота','грусть','тревога','усталость','одиночество','апатия','злость']
-const AFTER_OPTS  = ['согрел','взорвал мозг','не отпускает','рассмешил','задумал','опустошил','зарядил','напугал']
+// ── MoodSearch — точно по дизайну ─────────────────────────────
+const BEFORE_OPTS = ['скука', 'пустота', 'грусть', 'тревога', 'усталость', 'одиночество', 'апатия', 'злость']
+const AFTER_OPTS  = ['согрел', 'взорвал мозг', 'не отпускает', 'рассмешил', 'задумал', 'опустошил', 'зарядил', 'напугал']
 
 function MoodSearch({
   beforeSel, afterSel, onToggleBefore, onToggleAfter, onSearch,
 }: {
-  beforeSel: string[]
-  afterSel: string[]
-  onToggleBefore: (w: string) => void
-  onToggleAfter: (w: string) => void
+  beforeSel: string[]; afterSel: string[]
+  onToggleBefore: (w: string) => void; onToggleAfter: (w: string) => void
   onSearch: () => void
 }) {
   const total = beforeSel.length + afterSel.length
   return (
     <section style={{
-      background: T.paperSoft, border: `1px solid ${T.ink}`,
-      padding: '20px 24px', position: 'relative',
+      border: `1px solid ${T.ink}`,
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 220px',
+      minHeight: 260,
+      overflow: 'hidden',
     }}>
+      {/* LEFT — title */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 20, alignItems: 'start',
+        background: T.paperSoft,
+        padding: '24px 28px',
+        borderRight: `1px solid ${T.ink}`,
+      }}>
+        <div style={{
+          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
+          color: T.red, textTransform: 'uppercase', marginBottom: 10,
+        }}>⁕ основное действие</div>
+        <h1 style={{
+          fontFamily: T.display, fontSize: 26, fontWeight: 700, margin: '0 0 14px',
+          letterSpacing: -0.5, lineHeight: 1.1, color: T.ink,
+        }}>
+          Найти фильм<br/>по настроению
+        </h1>
+        <p style={{ fontSize: 13, color: T.inkSoft, margin: 0, lineHeight: 1.55 }}>
+          Выбери, <b>с чем пришёл</b> и <b>что хочешь унести</b>. Покажем фильмы, которые так ощутили другие.
+        </p>
+      </div>
+
+      {/* CENTER — chips */}
+      <div style={{
+        background: T.paperSoft,
+        padding: '24px 24px',
+        borderRight: `1px solid ${T.ink}`,
+        display: 'flex', flexDirection: 'column', gap: 16,
       }}>
         <div>
           <div style={{
-            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
-            color: T.red, textTransform: 'uppercase', marginBottom: 5,
-          }}>⁕ основное действие</div>
-          <h1 style={{
-            fontFamily: T.display, fontSize: 24, fontWeight: 700, margin: 0,
-            letterSpacing: -0.5, lineHeight: 1.1, color: T.ink,
+            fontFamily: T.mono, fontSize: 10, color: T.red, letterSpacing: 1.2,
+            textTransform: 'uppercase', marginBottom: 8,
+          }}>с чем пришёл →</div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {BEFORE_OPTS.map(w => (
+              <Emo key={w} w={w} kind="before" size="sm"
+                active={beforeSel.includes(w)} onClick={() => onToggleBefore(w)} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, color: T.blue, letterSpacing: 1.2,
+            textTransform: 'uppercase', marginBottom: 8,
+          }}>хочу унести →</div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {AFTER_OPTS.map(w => (
+              <Emo key={w} w={w} kind="after" size="sm"
+                active={afterSel.includes(w)} onClick={() => onToggleAfter(w)} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT — dark CTA block */}
+      <div
+        onClick={onSearch}
+        style={{
+          background: T.ink, color: T.paper,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', padding: '24px 20px', textAlign: 'center',
+        }}
+      >
+        <div>
+          <div style={{
+            fontFamily: T.sans, fontSize: 14, fontWeight: 600, lineHeight: 1.4,
           }}>
-            Найти фильм<br/>по настроению
-          </h1>
-          <p style={{ fontSize: 12, color: T.inkSoft, margin: '6px 0 0', maxWidth: 240, lineHeight: 1.5 }}>
-            Выбери, <b>с чем пришёл</b> и <b>что хочешь унести</b>.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gap: 10, alignSelf: 'center' }}>
-          <div>
-            <div style={{
-              fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.2,
-              textTransform: 'uppercase', marginBottom: 5,
-            }}>с чем пришёл →</div>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {BEFORE_OPTS.map(w => (
-                <Emo key={w} w={w} kind="before" size="sm"
-                  active={beforeSel.includes(w)}
-                  onClick={() => onToggleBefore(w)} />
-              ))}
-            </div>
+            {total > 0 ? `показать фильмы →` : 'показать всё →'}
           </div>
-          <div>
+          {total > 0 && (
             <div style={{
-              fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.2,
-              textTransform: 'uppercase', marginBottom: 5,
-            }}>хочу унести →</div>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {AFTER_OPTS.map(w => (
-                <Emo key={w} w={w} kind="after" size="sm"
-                  active={afterSel.includes(w)}
-                  onClick={() => onToggleAfter(w)} />
-              ))}
-            </div>
-          </div>
+              fontFamily: T.mono, fontSize: 10, color: 'rgba(233,226,207,0.5)',
+              marginTop: 6, letterSpacing: 1,
+            }}>выбрано {total} {total === 1 ? 'эмоция' : 'эмоции'}</div>
+          )}
         </div>
-
-        <button
-          onClick={onSearch}
-          style={{
-            background: T.ink, color: T.paper, border: 'none',
-            padding: '12px 18px', fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
-            alignSelf: 'stretch', minWidth: 160,
-          }}
-        >
-          {total > 0 ? `искать по ${total} эмоциям →` : 'показать всё →'}
-        </button>
       </div>
     </section>
   )
 }
 
-// ── SideFilters ────────────────────────────────────────────────
+// ── SideFilters — точно по дизайну ────────────────────────────
 const TYPE_FILTERS = [
   { value: 'all',    label: 'все' },
   { value: 'movie',  label: 'фильмы' },
@@ -166,89 +176,233 @@ const TYPE_FILTERS = [
   { value: 'book',   label: 'книги' },
 ]
 
-function SideFilters({
-  typeFilter, onTypeChange, total,
-}: {
-  typeFilter: string
-  onTypeChange: (t: string) => void
-  total: number
+function SideFilters({ typeFilter, onTypeChange, total }: {
+  typeFilter: string; onTypeChange: (t: string) => void; total: number
 }) {
+  const sections = [
+    {
+      title: 'лента',
+      items: TYPE_FILTERS.map(f => ({
+        l: f.label, v: f.value, n: typeFilter === f.value ? total : undefined,
+        active: typeFilter === f.value,
+        onClick: () => onTypeChange(f.value),
+      })),
+    },
+    {
+      title: 'по эмоции',
+      items: [
+        { l: 'не отпускает', n: undefined, active: false, onClick: undefined },
+        { l: 'взорвал мозг', n: undefined, active: false, onClick: undefined },
+        { l: 'согрел',       n: undefined, active: false, onClick: undefined },
+        { l: 'опустошил',    n: undefined, active: false, onClick: undefined },
+        { l: 'задумал',      n: undefined, active: false, onClick: undefined },
+      ],
+    },
+    {
+      title: 'по зрителю',
+      items: [
+        { l: 'нормис',       n: undefined, active: false, onClick: undefined },
+        { l: 'нефор',        n: undefined, active: false, onClick: undefined },
+        { l: 'нишевый',      n: undefined, active: false, onClick: undefined },
+        { l: 'сериалодрот',  n: undefined, active: false, onClick: undefined },
+        { l: 'анимешник',    n: undefined, active: false, onClick: undefined },
+      ],
+    },
+  ]
+
   return (
-    <aside style={{ paddingRight: 8 }}>
-      <div style={{ marginBottom: 22 }}>
-        <div style={{
-          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
-          color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
-        }}>лента</div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {TYPE_FILTERS.map(f => (
-            <li
-              key={f.value}
-              onClick={() => onTypeChange(f.value)}
-              style={{
-                display: 'flex', justifyContent: 'space-between',
-                padding: '5px 8px', fontSize: 13, borderRadius: 3, cursor: 'pointer',
-                color: typeFilter === f.value ? T.ink : T.inkSoft,
-                background: typeFilter === f.value ? T.paperDeep : 'transparent',
-                fontWeight: typeFilter === f.value ? 600 : 400,
-                marginBottom: 1,
-              }}
-            >
-              <span>{f.label}</span>
-              {typeFilter === f.value && (
-                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{total}</span>
-              )}
-            </li>
-          ))}
-        </ul>
+    <aside style={{ paddingTop: 4 }}>
+      {sections.map(s => (
+        <div key={s.title} style={{ marginBottom: 24 }}>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+            color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
+          }}>{s.title}</div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {s.items.map(it => (
+              <li
+                key={it.l}
+                onClick={it.onClick}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '5px 8px', fontSize: 13, borderRadius: 3,
+                  cursor: it.onClick ? 'pointer' : 'default',
+                  color: it.active ? T.ink : T.inkSoft,
+                  background: it.active ? T.paperDeep : 'transparent',
+                  fontWeight: it.active ? 600 : 400, marginBottom: 1,
+                }}
+              >
+                <span>{it.l}</span>
+                {it.n !== undefined && (
+                  <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{it.n}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </aside>
+  )
+}
+
+// ── FilmOfTheDay ───────────────────────────────────────────────
+function FilmOfTheDay({ entry }: { entry?: Entry }) {
+  const navigate = useNavigate()
+  const work = entry?.work
+
+  return (
+    <aside style={{
+      border: `1px solid ${T.ink}`,
+      display: 'grid', gridTemplateRows: 'auto 1fr auto',
+      overflow: 'hidden',
+    }}>
+      {/* header */}
+      <div style={{
+        padding: '8px 12px', borderBottom: `1px solid ${T.ink}`,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontFamily: T.mono, fontSize: 10, letterSpacing: 1.2,
+        color: T.inkMute, textTransform: 'uppercase',
+      }}>
+        <span>⁕ фильм дня</span>
+        <span>№ 01 / {new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span>
       </div>
 
-      <div style={{ marginBottom: 22 }}>
+      {/* poster */}
+      <div style={{
+        background: T.blue, color: T.paper,
+        padding: '20px 18px', minHeight: 180, overflow: 'hidden',
+        position: 'relative',
+      }}>
+        {/* decorative circle */}
         <div style={{
-          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
-          color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
-        }}>по эмоции</div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {['не отпускает','взорвал мозг','согрел','опустошил','задумал'].map(em => (
-            <li key={em} style={{
-              display: 'flex', justifyContent: 'space-between',
-              padding: '5px 8px', fontSize: 13, borderRadius: 3, cursor: 'default',
-              color: T.inkSoft, marginBottom: 1,
-            }}>
-              <span>{em}</span>
-            </li>
-          ))}
-        </ul>
+          position: 'absolute', top: -24, right: -24,
+          width: 100, height: 100, borderRadius: '50%',
+          background: T.red, mixBlendMode: 'multiply', opacity: 0.85,
+        }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
+            opacity: 0.65, textTransform: 'uppercase', marginBottom: 10,
+          }}>
+            {work?.year && `${work.year} · `}{work ? WORK_TYPE_LABEL[work.type] : 'кино'}
+          </div>
+          <div style={{
+            fontFamily: T.display, fontSize: 44, fontWeight: 800,
+            lineHeight: 0.9, letterSpacing: -1.5,
+            textTransform: 'uppercase',
+          }}>
+            {work ? work.title.replace(/\s+/g, '\n').split('\n').map((line, i) => (
+              <span key={i}>{line}<br/></span>
+            )) : (
+              <>Маг<br/>но<br/>лия</>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* info */}
+      <div style={{ padding: '12px 14px', display: 'grid', gap: 8 }}>
+        {entry && (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Emo w={entry.cameWith.slice(0, 14)} kind="before" size="sm" />
+            <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
+            <Emo w={entry.leftWith.slice(0, 14)} kind="after" size="sm" />
+          </div>
+        )}
+        <button
+          onClick={() => entry && navigate(`/work/${entry.workId}`)}
+          style={{
+            background: T.ink, color: T.paper, border: 'none',
+            padding: '9px 12px', fontSize: 12, fontWeight: 500,
+            cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
+          }}
+        >
+          открыть карточку →
+        </button>
       </div>
     </aside>
   )
 }
 
+// ── PortraitWidget ─────────────────────────────────────────────
+function PortraitWidget({ entries }: { entries: Entry[] }) {
+  const navigate = useNavigate()
+  return (
+    <div style={{
+      border: `1px solid ${T.rule}`, padding: '14px 16px', background: T.paperSoft,
+    }}>
+      <div style={{
+        fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.4,
+        textTransform: 'uppercase', marginBottom: 12,
+      }}>твой портрет — месяц</div>
+
+      {entries.length > 0 ? (
+        <>
+          {[
+            { label: `приходишь — ${entries[0]?.cameWith?.slice(0, 12) ?? 'усталым'}`, v: 62, c: T.red },
+            { label: `уносишь — ${entries[0]?.leftWith?.slice(0, 14) ?? 'задумчивость'}`,  v: 48, c: T.blue },
+            { label: 'любишь — медленное', v: 71, c: T.ink },
+          ].map(r => (
+            <div key={r.label} style={{ marginBottom: 10 }}>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between',
+                fontSize: 12, color: T.ink, marginBottom: 4,
+              }}>
+                <span>{r.label}</span>
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{r.v}%</span>
+              </div>
+              <div style={{ height: 3, background: T.ruleSoft, position: 'relative' }}>
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0,
+                  width: `${r.v}%`, background: r.c,
+                }} />
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => navigate('/profile')}
+            style={{
+              background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+              fontSize: 12, color: T.inkSoft, fontFamily: T.sans,
+              borderBottom: `1px dashed ${T.rule}`, paddingBottom: 1, marginTop: 4,
+            }}
+          >весь портрет →</button>
+        </>
+      ) : (
+        <p style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.5, margin: 0 }}>
+          Напиши первый отзыв — и увидишь свой портрет зрителя.
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ── PostRow ────────────────────────────────────────────────────
+const actionBtn: React.CSSProperties = {
+  background: 'transparent', border: 'none', padding: 0,
+  fontSize: 12, color: 'inherit', cursor: 'pointer', fontFamily: 'inherit',
+}
+
 function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () => void }) {
   const work = entry.work
   const author = entry.user?.firstName ?? 'Аноним'
-  const initial = author[0]?.toUpperCase() ?? '?'
 
   return (
-    <article
-      onClick={onClick}
-      style={{
-        display: 'grid', gridTemplateColumns: '36px 1fr 150px', gap: 16,
-        padding: '18px 0', borderBottom: `1px solid ${T.ruleSoft}`,
-        cursor: 'pointer',
-      }}
-    >
+    <article onClick={onClick} style={{
+      display: 'grid', gridTemplateColumns: '36px 1fr 160px', gap: 20,
+      padding: '20px 0', borderBottom: `1px solid ${T.ruleSoft}`,
+      cursor: 'pointer',
+    }}>
       {/* index */}
-      <div style={{ textAlign: 'right', paddingTop: 2 }}>
-        <div style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1 }}>
+      <div style={{ paddingTop: 3, textAlign: 'right' }}>
+        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
           {String(n).padStart(2, '0')}
-        </div>
+        </span>
       </div>
 
       {/* content */}
       <div>
-        {/* author + time */}
+        {/* author row */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
           fontSize: 12, color: T.inkSoft,
@@ -256,32 +410,23 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
           <span style={{
             width: 22, height: 22, borderRadius: '50%', background: T.paperDeep,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 600, color: T.ink, flexShrink: 0,
-          }}>{initial}</span>
-          <b style={{ color: T.ink, fontWeight: 600 }}>{author}</b>
-          {work && (
-            <span style={{ color: T.inkMute }}>· {WORK_TYPE_LABEL[work.type] ?? work.type}</span>
-          )}
-          <span style={{
-            marginLeft: 'auto', fontFamily: T.mono, fontSize: 10,
-            letterSpacing: 0.8, color: T.inkMute,
-          }}>
+            fontSize: 11, fontWeight: 700, color: T.ink, flexShrink: 0,
+          }}>{author[0]?.toUpperCase()}</span>
+          <b style={{ color: T.ink }}>{author}</b>
+          {work && <span style={{ color: T.inkMute }}>· {WORK_TYPE_LABEL[work.type]}</span>}
+          <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 10, color: T.inkMute }}>
             {timeAgo(entry.createdAt)}
           </span>
         </div>
 
         {/* title */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
           <h3 style={{
-            margin: 0, fontFamily: T.display, fontSize: 18, fontWeight: 700,
-            letterSpacing: -0.3, color: T.ink,
-          }}>
-            {work?.title ?? '—'}
-          </h3>
+            margin: 0, fontFamily: T.display, fontSize: 22, fontWeight: 700,
+            letterSpacing: -0.4, color: T.ink, lineHeight: 1.1,
+          }}>{work?.title ?? '—'}</h3>
           {work?.year && (
-            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1 }}>
-              {work.year}
-            </span>
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{work.year}</span>
           )}
         </div>
 
@@ -292,99 +437,80 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
           <Emo w={entry.leftWith} kind="after" size="sm" />
         </div>
 
-        {/* atmosphere / quote */}
+        {/* quote */}
         {entry.atmosphere && (
           <p style={{
-            margin: 0, fontSize: 13, lineHeight: 1.55, color: T.ink, maxWidth: 600,
+            margin: '0 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
             overflow: 'hidden', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          } as React.CSSProperties}>
-            {entry.atmosphere}
-          </p>
+          } as React.CSSProperties}>{entry.atmosphere}</p>
         )}
 
-        {/* actions */}
-        <div style={{
-          display: 'flex', gap: 16, marginTop: 10,
-          fontSize: 12, color: T.inkSoft, fontFamily: T.sans,
-        }}>
-          <button style={actionBtn}>↩ так же чувствовал</button>
-          <button style={{ ...actionBtn, marginLeft: 'auto', color: T.inkMute }}
-            onClick={(e) => { e.stopPropagation(); onClick() }}>
-            читать полностью →
-          </button>
-        </div>
+        <button style={{ ...actionBtn, color: T.inkMute }}
+          onClick={e => { e.stopPropagation(); onClick() }}>
+          читать полностью →
+        </button>
       </div>
 
-      {/* mini poster */}
+      {/* poster */}
       <div style={{
-        width: '100%', aspectRatio: '2/3', maxHeight: 110,
-        background: T.paperDeep, border: `1px solid ${T.rule}`,
-        position: 'relative', overflow: 'hidden',
+        width: '100%', height: 120, background: T.paperDeep,
+        border: `1px solid ${T.rule}`, overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
+        flexShrink: 0, position: 'relative',
       }}>
         {work?.posterUrl ? (
-          <img
-            src={work.posterUrl} alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            loading="lazy"
-          />
+          <img src={work.posterUrl} alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
         ) : (
-          <span style={{
-            fontFamily: T.display, fontSize: 13, fontWeight: 700,
-            color: T.ink, opacity: 0.7, textAlign: 'center', lineHeight: 1,
-            padding: '0 8px', textTransform: 'uppercase',
-          }}>
-            {work?.title?.slice(0, 12) ?? '—'}
-          </span>
-        )}
-        {work?.year && (
-          <span style={{
-            position: 'absolute', top: 5, right: 5,
-            fontFamily: T.mono, fontSize: 9, color: T.inkMute, letterSpacing: 1,
-          }}>{work.year}</span>
+          <>
+            <span style={{
+              fontFamily: T.display, fontSize: 11, fontWeight: 700, color: T.inkMute,
+              textAlign: 'center', padding: '0 8px', textTransform: 'uppercase', lineHeight: 1.2,
+            }}>{work?.title?.slice(0, 12)}</span>
+            {work?.year && (
+              <span style={{
+                position: 'absolute', top: 6, right: 6,
+                fontFamily: T.mono, fontSize: 9, color: T.inkMute,
+              }}>{work.year}</span>
+            )}
+          </>
         )}
       </div>
     </article>
   )
 }
 
-const actionBtn: React.CSSProperties = {
-  background: 'transparent', border: 'none', padding: 0,
-  fontSize: 12, color: 'inherit', cursor: 'pointer', fontFamily: 'inherit',
-}
-
 // ── Skeleton ───────────────────────────────────────────────────
 function PostSkeleton() {
   return (
     <div style={{
-      display: 'grid', gridTemplateColumns: '36px 1fr 150px', gap: 16,
-      padding: '18px 0', borderBottom: `1px solid ${T.ruleSoft}`,
+      display: 'grid', gridTemplateColumns: '36px 1fr 160px', gap: 20,
+      padding: '20px 0', borderBottom: `1px solid ${T.ruleSoft}`,
     }}>
       <div />
       <div>
-        <div style={{ height: 14, borderRadius: 2, background: T.paperDeep, marginBottom: 10, width: '30%' }} />
-        <div style={{ height: 20, borderRadius: 2, background: T.paperDeep, marginBottom: 10, width: '55%' }} />
-        <div style={{ height: 12, borderRadius: 2, background: T.paperDeep, marginBottom: 8, width: '45%' }} />
-        <div style={{ height: 12, borderRadius: 2, background: T.paperDeep, width: '80%' }} />
+        <div style={{ height: 13, borderRadius: 2, background: T.paperDeep, marginBottom: 12, width: '25%' }} />
+        <div style={{ height: 22, borderRadius: 2, background: T.paperDeep, marginBottom: 12, width: '50%' }} />
+        <div style={{ height: 13, borderRadius: 2, background: T.paperDeep, marginBottom: 8, width: '42%' }} />
+        <div style={{ height: 13, borderRadius: 2, background: T.paperDeep, width: '75%' }} />
       </div>
-      <div style={{ background: T.paperDeep, borderRadius: 2, height: 90 }} />
+      <div style={{ height: 120, background: T.paperDeep, borderRadius: 2 }} />
     </div>
   )
 }
 
 // ── FeedPage ───────────────────────────────────────────────────
 export function FeedPage() {
-  const [entries, setEntries] = useState<Entry[]>([])
-  const [loading, setLoading]     = useState(true)
+  const [entries, setEntries]         = useState<Entry[]>([])
+  const [loading, setLoading]         = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore]     = useState(true)
-  const [page, setPage]           = useState(1)
-  const [typeFilter, setTypeFilter] = useState('all')
-  const [beforeSel, setBeforeSel] = useState<string[]>([])
-  const [afterSel, setAfterSel]   = useState<string[]>([])
-  const navigate = useNavigate()
+  const [hasMore, setHasMore]         = useState(true)
+  const [page, setPage]               = useState(1)
+  const [typeFilter, setTypeFilter]   = useState('all')
+  const [beforeSel, setBeforeSel]     = useState<string[]>([])
+  const [afterSel, setAfterSel]       = useState<string[]>([])
+  const navigate    = useNavigate()
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const loadEntries = useCallback(async (p: number, type: string, replace: boolean) => {
@@ -393,15 +519,11 @@ export function FeedPage() {
       if (replace) setEntries(data)
       else setEntries(prev => [...prev, ...data])
       setHasMore(data.length === 20)
-    } catch (e) {
-      console.error(e)
-    }
+    } catch (e) { console.error(e) }
   }, [])
 
   useEffect(() => {
-    setLoading(true)
-    setPage(1)
-    setHasMore(true)
+    setLoading(true); setPage(1); setHasMore(true)
     loadEntries(1, typeFilter, true).finally(() => setLoading(false))
   }, [typeFilter, loadEntries])
 
@@ -409,9 +531,7 @@ export function FeedPage() {
     if (!hasMore || loadingMore) return
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        const next = page + 1
-        setPage(next)
-        setLoadingMore(true)
+        const next = page + 1; setPage(next); setLoadingMore(true)
         loadEntries(next, typeFilter, false).finally(() => setLoadingMore(false))
       }
     }, { threshold: 0.1 })
@@ -420,175 +540,116 @@ export function FeedPage() {
   }, [hasMore, loadingMore, page, typeFilter, loadEntries])
 
   const toggleBefore = (w: string) =>
-    setBeforeSel(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])
+    setBeforeSel(p => p.includes(w) ? p.filter(x => x !== w) : [...p, w])
   const toggleAfter = (w: string) =>
-    setAfterSel(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])
+    setAfterSel(p => p.includes(w) ? p.filter(x => x !== w) : [...p, w])
 
-  const handleSearch = () => navigate('/search')
-
-  // client-side mood filter on top of type filter
   const displayed = entries.filter(e => {
-    if (beforeSel.length === 0 && afterSel.length === 0) return true
-    const cw = e.cameWith.toLowerCase()
-    const lw = e.leftWith.toLowerCase()
-    const beforeMatch = beforeSel.length === 0 || beforeSel.some(w => cw.includes(w))
-    const afterMatch  = afterSel.length === 0  || afterSel.some(w => lw.includes(w))
-    return beforeMatch && afterMatch
+    if (!beforeSel.length && !afterSel.length) return true
+    const cw = e.cameWith.toLowerCase(), lw = e.leftWith.toLowerCase()
+    return (
+      (!beforeSel.length || beforeSel.some(w => cw.includes(w))) &&
+      (!afterSel.length  || afterSel.some(w => lw.includes(w)))
+    )
   })
+
+  // берём первую запись для "фильма дня"
+  const featured = entries[0]
 
   return (
     <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans }}>
-      <main style={{
-        maxWidth: 1200, margin: '0 auto', padding: '24px 32px 60px',
-        display: 'grid', gridTemplateColumns: '200px 1fr 280px', gap: 28,
-        alignItems: 'start',
-      }}>
-        {/* LEFT — filters */}
-        <SideFilters
-          typeFilter={typeFilter}
-          onTypeChange={(t) => setTypeFilter(t)}
-          total={entries.length}
-        />
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 40px 80px' }}>
 
-        {/* CENTER — mood search + feed */}
-        <div>
-          <MoodSearch
-            beforeSel={beforeSel}
-            afterSel={afterSel}
-            onToggleBefore={toggleBefore}
-            onToggleAfter={toggleAfter}
-            onSearch={handleSearch}
+        {/* ── 3-колоночная сетка ──────────────────────────────── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '200px 1fr 280px',
+          gap: 32,
+          alignItems: 'start',
+        }}>
+
+          {/* ═══ LEFT — SideFilters ═══ */}
+          <SideFilters
+            typeFilter={typeFilter}
+            onTypeChange={setTypeFilter}
+            total={entries.length}
           />
 
-          {/* feed header */}
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-            padding: '24px 0 10px', borderBottom: `1px solid ${T.ink}`, marginTop: 8,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-              <h2 style={{
-                margin: 0, fontFamily: T.display, fontSize: 18, fontWeight: 700,
-                letterSpacing: -0.3, color: T.ink,
-              }}>Лента</h2>
-              <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1 }}>
-                {entries.length} {entries.length === 1 ? 'запись' : 'записей'}
+          {/* ═══ CENTER — MoodSearch + Feed ═══ */}
+          <div>
+            <MoodSearch
+              beforeSel={beforeSel} afterSel={afterSel}
+              onToggleBefore={toggleBefore} onToggleAfter={toggleAfter}
+              onSearch={() => navigate('/search')}
+            />
+
+            {/* feed header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+              padding: '28px 0 12px', borderBottom: `1px solid ${T.ink}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+                <h2 style={{
+                  margin: 0, fontFamily: T.display, fontSize: 22, fontWeight: 700,
+                  letterSpacing: -0.4, color: T.ink,
+                }}>Лента</h2>
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
+                  {entries.length} {entries.length === 1 ? 'отзыв' : 'отзывов'}
+                </span>
+              </div>
+              <span style={{ fontSize: 11, color: T.inkMute, fontFamily: T.mono }}>
+                хронология ↓
               </span>
             </div>
-            <span style={{ fontSize: 12, color: T.inkMute, fontFamily: T.mono }}>
-              хронология ↓
-            </span>
-          </div>
 
-          {/* loading skeleton */}
-          {loading && (
-            <>
-              <PostSkeleton />
-              <PostSkeleton />
-              <PostSkeleton />
-            </>
-          )}
+            {loading && <><PostSkeleton /><PostSkeleton /><PostSkeleton /></>}
 
-          {/* empty state */}
-          {!loading && displayed.length === 0 && (
-            <div style={{ padding: '60px 0', textAlign: 'center' }}>
-              <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 16 }}>
-                ⁕ записей пока нет
-              </p>
-              <button
-                onClick={() => navigate('/add')}
-                style={{
+            {!loading && displayed.length === 0 && (
+              <div style={{ padding: '60px 0', textAlign: 'center' }}>
+                <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 20 }}>
+                  ⁕ записей пока нет
+                </p>
+                <button onClick={() => navigate('/add')} style={{
                   background: T.ink, color: T.paper, border: 'none',
                   padding: '10px 24px', fontSize: 13, cursor: 'pointer',
                   fontFamily: T.sans, borderRadius: 3,
-                }}
-              >
-                Написать первым →
-              </button>
-            </div>
-          )}
-
-          {/* feed */}
-          {displayed.map((entry, i) => (
-            <PostRow
-              key={entry.id}
-              entry={entry}
-              n={i + 1}
-              onClick={() => navigate(`/work/${entry.workId}`)}
-            />
-          ))}
-
-          <div ref={sentinelRef} style={{ height: 1 }} />
-
-          {loadingMore && (
-            <>
-              <PostSkeleton />
-              <PostSkeleton />
-            </>
-          )}
-
-          {!loading && !loadingMore && !hasMore && entries.length > 0 && (
-            <div style={{ textAlign: 'center', padding: '28px 0', fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
-              ⁕ конец ленты
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT — portrait widget */}
-        <div style={{ display: 'grid', gap: 14, position: 'sticky', top: 88 }}>
-          {/* User portrait */}
-          <div style={{
-            border: `1px solid ${T.rule}`, padding: '14px 16px', background: T.paperSoft,
-          }}>
-            <div style={{
-              fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.4,
-              textTransform: 'uppercase', marginBottom: 10,
-            }}>твой портрет — лента</div>
-
-            {entries.length > 0 ? (
-              <>
-                {/* most common cameWith */}
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, color: T.inkSoft, marginBottom: 4 }}>
-                    чаще всего приходишь с
-                  </div>
-                  <Emo w={entries[0]?.cameWith?.slice(0, 20) ?? '—'} kind="before" size="sm" />
-                </div>
-                <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, color: T.inkSoft, marginBottom: 4 }}>
-                    чаще всего уносишь
-                  </div>
-                  <Emo w={entries[0]?.leftWith?.slice(0, 20) ?? '—'} kind="after" size="sm" />
-                </div>
-              </>
-            ) : (
-              <p style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.5 }}>
-                Напиши первый отзыв — и увидишь свой портрет зрителя.
-              </p>
+                }}>Написать первым →</button>
+              </div>
             )}
 
-            <button
-              onClick={() => navigate('/add')}
-              style={{
-                background: T.ink, color: T.paper, border: 'none',
-                padding: '9px 12px', fontSize: 12, fontWeight: 500,
-                cursor: 'pointer', fontFamily: T.sans, marginTop: 8,
-                borderRadius: 3, width: '100%',
-              }}
-            >
-              написать отзыв →
-            </button>
+            {displayed.map((entry, i) => (
+              <PostRow
+                key={entry.id} entry={entry} n={i + 1}
+                onClick={() => navigate(`/work/${entry.workId}`)}
+              />
+            ))}
+
+            <div ref={sentinelRef} style={{ height: 1 }} />
+            {loadingMore && <><PostSkeleton /><PostSkeleton /></>}
+
+            {!loading && !loadingMore && !hasMore && entries.length > 0 && (
+              <div style={{
+                textAlign: 'center', padding: '32px 0',
+                fontFamily: T.mono, fontSize: 11, color: T.inkMute,
+              }}>⁕ конец ленты</div>
+            )}
           </div>
 
-          {/* Stats footer */}
-          <div style={{
-            padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
-            color: T.inkMute, letterSpacing: 1.2, textAlign: 'center',
-            borderTop: `1px dashed ${T.rule}`,
-          }}>
-            ⁕ {entries.length} записей · FeelFilm
+          {/* ═══ RIGHT — виджеты ═══ */}
+          <div style={{ display: 'grid', gap: 16, position: 'sticky', top: 80 }}>
+            <FilmOfTheDay entry={featured} />
+            <PortraitWidget entries={entries} />
+            <div style={{
+              padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
+              color: T.inkMute, letterSpacing: 1.2, textAlign: 'center',
+              borderTop: `1px dashed ${T.rule}`,
+            }}>
+              ⁕ {entries.length} записей · FeelFilm
+            </div>
           </div>
+
         </div>
-      </main>
+      </div>
     </div>
   )
 }
