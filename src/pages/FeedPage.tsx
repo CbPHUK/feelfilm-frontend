@@ -236,7 +236,7 @@ function SideFilters({ typeFilter, onTypeChange, afterSel, onToggleAfter, total 
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '5px 8px', fontSize: 13, borderRadius: 3,
-                  cursor: it.onClick ? 'pointer' : 'default',
+                  cursor: 'pointer',
                   color: it.active ? T.ink : T.inkSoft,
                   background: it.active ? T.paperDeep : 'transparent',
                   fontWeight: it.active ? 600 : 400, marginBottom: 1,
