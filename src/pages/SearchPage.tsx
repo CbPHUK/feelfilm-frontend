@@ -150,7 +150,7 @@ export function SearchPage() {
           <h1 style={{
             fontFamily: T.display, fontSize: 'clamp(28px, 4vw, 44px)',
             fontWeight: 800, letterSpacing: -1, margin: 0, lineHeight: 1, color: T.ink,
-          }}>Как ты сейчас?</h1>
+          }}>Как ты себя чувствуешь сейчас?</h1>
           <p style={{ fontSize: 13, color: T.inkSoft, marginTop: 10, lineHeight: 1.5 }}>
             Выбери настроение — покажем, что смотрели другие в этот момент
           </p>
