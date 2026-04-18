@@ -350,7 +350,7 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
           <b style={{ color: T.ink }}>{author}</b>
           {work && (
             <span style={{ color: T.inkMute }}>
-              · {WORK_TYPE_ICON[work.type] ?? ''} {WORK_TYPE_LABEL[work.type]}
+              · {WORK_TYPE_LABEL[work.type]}
             </span>
           )}
           <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 10, color: T.inkMute }}>
@@ -403,15 +403,20 @@ function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () =
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
         ) : (
           <>
+            {/* первая буква названия */}
             <span style={{
-              fontFamily: T.display, fontSize: 11, fontWeight: 700, color: T.inkMute,
-              textAlign: 'center', padding: '0 8px', textTransform: 'uppercase', lineHeight: 1.2,
-            }}>{work?.title?.slice(0, 12)}</span>
-            {work?.year && (
+              fontFamily: T.display, fontSize: 56, fontWeight: 800,
+              color: T.rule, textTransform: 'uppercase', lineHeight: 1,
+              userSelect: 'none',
+            }}>{work?.title?.[0] ?? '?'}</span>
+            {/* тип внизу */}
+            {work && (
               <span style={{
-                position: 'absolute', top: 6, right: 6,
-                fontFamily: T.mono, fontSize: 9, color: T.inkMute,
-              }}>{work.year}</span>
+                position: 'absolute', bottom: 8, left: 0, right: 0,
+                textAlign: 'center',
+                fontFamily: T.mono, fontSize: 9, letterSpacing: 1.2,
+                color: T.inkMute, textTransform: 'uppercase',
+              }}>{WORK_TYPE_LABEL[work.type]}</span>
             )}
           </>
         )}
