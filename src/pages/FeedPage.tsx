@@ -167,26 +167,6 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
   return (
     <aside style={{ border: `1px solid ${T.ink}`, overflow: 'hidden' }}>
 
-      {/* type switcher */}
-      <div style={{ display: 'flex', borderBottom: `1px solid ${T.ink}` }}>
-        {SLIDE_TYPES.map((s, i) => (
-          <button
-            key={s.value}
-            onClick={() => setIdx(i)}
-            title={s.label}
-            style={{
-              flex: 1, padding: '8px 4px',
-              border: 'none',
-              borderRight: i < SLIDE_TYPES.length - 1 ? `1px solid ${T.ink}` : 'none',
-              background: i === idx ? T.ink : 'transparent',
-              color: i === idx ? T.paper : T.inkMute,
-              fontSize: 14, cursor: 'pointer',
-              transition: 'background 0.15s, color 0.15s',
-            }}
-          >{s.icon}</button>
-        ))}
-      </div>
-
       {/* label + date */}
       <div style={{
         padding: '8px 12px', borderBottom: `1px solid ${T.ink}`,
@@ -227,6 +207,26 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
               <span style={{ opacity: 0.25 }}>—</span>
             )}
           </div>
+        </div>
+
+        {/* dots */}
+        <div style={{
+          display: 'flex', gap: 6, marginTop: 20,
+        }}>
+          {SLIDE_TYPES.map((s, i) => (
+            <button
+              key={s.value}
+              onClick={() => setIdx(i)}
+              title={s.label}
+              style={{
+                width: i === idx ? 18 : 6, height: 6,
+                borderRadius: 3, border: 'none', padding: 0,
+                background: i === idx ? T.paper : 'rgba(255,255,255,0.35)',
+                cursor: 'pointer',
+                transition: 'width 0.25s, background 0.2s',
+              }}
+            />
+          ))}
         </div>
       </div>
 
