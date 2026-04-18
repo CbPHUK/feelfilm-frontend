@@ -1,204 +1,506 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Entry } from '../types'
 
-const TYPE_FILTERS = [
-  { value: 'all',    label: 'Всё' },
-  { value: 'movie',  label: 'Фильмы' },
-  { value: 'series', label: 'Сериалы' },
-  { value: 'anime',  label: 'Аниме' },
-  { value: 'book',   label: 'Книги' },
-]
-
-const TYPE_ICON: Record<string, string> = {
-  movie: '◈', series: '▦', anime: '✦', book: '◉',
+// ── Design tokens (matching FeelFilm.html prototype) ──────────
+const T = {
+  paper:     '#e9e2cf',
+  paperSoft: '#efe7d2',
+  paperDeep: '#ddd3bb',
+  ink:       '#1b1d2a',
+  inkSoft:   'rgba(27,29,42,0.62)',
+  inkMute:   'rgba(27,29,42,0.45)',
+  rule:      'rgba(27,29,42,0.18)',
+  ruleSoft:  'rgba(27,29,42,0.10)',
+  blue:      '#2b4fc2',
+  red:       '#d64026',
+  mono:      '"JetBrains Mono", ui-monospace, monospace',
+  display:   '"Unbounded", "Inter", sans-serif',
+  sans:      '"Inter", -apple-system, system-ui, sans-serif',
 }
 
-const TYPE_COLOR: Record<string, string> = {
-  movie: 'var(--coral)', series: 'var(--teal)', anime: '#9B7EC8', book: '#5a9e55',
-}
-
+// ── helpers ────────────────────────────────────────────────────
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
   if (diff < 60) return 'только что'
   if (diff < 3600) return `${Math.floor(diff / 60)} мин назад`
   if (diff < 86400) return `${Math.floor(diff / 3600)} ч назад`
-  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} дн назад`
+  if (diff < 86400 * 2) return 'вчера'
+  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} дн. назад`
   return new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
-function EntryCard({ entry, onClick }: { entry: Entry; onClick: () => void }) {
-  const work = entry.work
+function todayLabel(): string {
+  const d = new Date()
+  const days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(2)
+  return `${days[d.getDay()]} · ${dd}.${mm}.${yy}`
+}
+
+const WORK_TYPE_LABEL: Record<string, string> = {
+  movie: 'фильм', series: 'сериал', anime: 'аниме', book: 'книга',
+}
+
+// ── Emo chip — core atom ───────────────────────────────────────
+interface EmoProps {
+  w: string
+  kind?: 'before' | 'after' | 'neutral'
+  size?: 'sm' | 'md' | 'lg'
+  active?: boolean
+  onClick?: () => void
+}
+function Emo({ w, kind = 'neutral', size = 'md', active, onClick }: EmoProps) {
+  const variants = {
+    before:      { bg: 'transparent', color: T.red,   border: `1px solid ${T.red}` },
+    after:       { bg: 'transparent', color: T.blue,  border: `1px solid ${T.blue}` },
+    neutral:     { bg: 'transparent', color: T.ink,   border: `1px solid ${T.rule}` },
+    beforeSolid: { bg: T.red,  color: T.paper, border: `1px solid ${T.red}` },
+    afterSolid:  { bg: T.blue, color: T.paper, border: `1px solid ${T.blue}` },
+  }
+  const v = active
+    ? variants[kind === 'before' ? 'beforeSolid' : 'afterSolid']
+    : variants[kind]
+  const pad = size === 'sm' ? '2px 8px' : size === 'lg' ? '6px 12px' : '3px 10px'
+  const fs  = size === 'sm' ? 11 : size === 'lg' ? 13 : 12
   return (
-    <div
+    <span
       onClick={onClick}
-      className="hover-card"
       style={{
-        display: 'flex', gap: 14, padding: '16px',
-        borderRadius: 'var(--r-lg)',
-        background: 'var(--glass-bg)',
-        backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid var(--glass-border)',
-        boxShadow: 'var(--glass-shadow-sm)',
-        cursor: 'pointer',
-        marginBottom: 10,
+        display: 'inline-flex', alignItems: 'center',
+        padding: pad, fontSize: fs, lineHeight: 1.2,
+        background: v.bg, color: v.color, border: v.border,
+        borderRadius: 3, fontWeight: 500, letterSpacing: 0.1,
+        fontFamily: T.sans, cursor: onClick ? 'pointer' : 'default',
+        whiteSpace: 'nowrap', userSelect: 'none',
+        transition: 'background 0.12s, color 0.12s',
       }}
     >
-      {/* Постер */}
-      {work?.posterUrl ? (
-        <img
-          src={work.posterUrl} alt=""
-          style={{ width: 52, height: 78, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
-          loading="lazy"
-        />
-      ) : (
-        <div style={{
-          width: 52, height: 78, borderRadius: 8, flexShrink: 0,
-          background: 'var(--glass-border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20, color: work ? TYPE_COLOR[work.type] : 'var(--coral)',
-        }}>
-          {work ? TYPE_ICON[work.type] : '◈'}
-        </div>
-      )}
+      {w}
+    </span>
+  )
+}
 
-      {/* Содержимое */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Заголовок + тег типа */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>
-              {work?.title}
-            </span>
-            {work?.year && (
-              <span style={{ fontSize: 12, color: 'var(--text-hint)', marginLeft: 6 }}>{work.year}</span>
-            )}
+// ── TopBar ─────────────────────────────────────────────────────
+function TopBar({ onWrite }: { onWrite: () => void }) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const token = localStorage.getItem('ff_token')
+  const name = localStorage.getItem('ff_display_name') ?? ''
+  const nav = [
+    { l: 'лента',   path: '/' },
+    { l: 'поиск',   path: '/search' },
+    { l: 'каталог', path: '/library' },
+    { l: 'профиль', path: '/profile' },
+  ]
+  return (
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 20,
+      background: T.paper, borderBottom: `1px solid ${T.ink}`,
+    }}>
+      {/* meta strip */}
+      <div style={{
+        padding: '6px 40px', display: 'flex', justifyContent: 'space-between',
+        fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute,
+        textTransform: 'uppercase', borderBottom: `1px solid ${T.ruleSoft}`,
+      }}>
+        <span>{todayLabel()}</span>
+        <span>フィールフィルム · эмоциональный журнал кино</span>
+        <span>ru</span>
+      </div>
+      {/* main nav */}
+      <div style={{
+        padding: '12px 40px',
+        display: 'grid', gridTemplateColumns: 'auto 1fr auto',
+        alignItems: 'center', gap: 32,
+      }}>
+        {/* logo */}
+        <div
+          onClick={() => navigate('/')}
+          style={{ display: 'flex', alignItems: 'baseline', gap: 10, cursor: 'pointer' }}
+        >
+          <div style={{
+            fontFamily: T.display, fontSize: 20, fontWeight: 800,
+            letterSpacing: -0.6, lineHeight: 1, color: T.ink,
+          }}>
+            FeelFilm<span style={{ color: T.red }}>.</span>
           </div>
-          {work && (
-            <span style={{
-              fontSize: 10, padding: '2px 7px', borderRadius: 'var(--r-pill)',
-              background: `${TYPE_COLOR[work.type]}22`,
-              color: TYPE_COLOR[work.type],
-              fontWeight: 600, flexShrink: 0,
-              letterSpacing: '0.04em',
+          <span style={{
+            fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.2,
+            textTransform: 'uppercase',
+          }}>v. 4 · 2026</span>
+        </div>
+
+        {/* nav links */}
+        <nav style={{ display: 'flex', gap: 22, justifyContent: 'center' }}>
+          {nav.map(n => (
+            <button
+              key={n.l}
+              onClick={() => navigate(n.path)}
+              style={{
+                fontSize: 13, color: pathname === n.path ? T.ink : T.inkSoft,
+                fontWeight: pathname === n.path ? 600 : 400,
+                paddingBottom: 2, background: 'none',
+                border: 'none',
+                borderBottom: `2px solid ${pathname === n.path ? T.red : 'transparent'}`,
+                cursor: 'pointer', fontFamily: T.sans,
+              }}
+            >
+              {n.l}
+            </button>
+          ))}
+        </nav>
+
+        {/* right: write + avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={onWrite}
+            style={{
+              background: 'transparent', border: `1px solid ${T.rule}`,
+              padding: '7px 12px', fontSize: 12, color: T.inkSoft,
+              fontFamily: T.sans, cursor: 'pointer', borderRadius: 3,
+            }}
+          >
+            + написать отзыв
+          </button>
+          {token && name && (
+            <div
+              onClick={() => navigate('/profile')}
+              style={{
+                width: 32, height: 32, borderRadius: '50%', background: T.ink,
+                color: T.paper, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              {name[0]?.toUpperCase()}
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+// ── MoodSearch ─────────────────────────────────────────────────
+const BEFORE_OPTS = ['скука','пустота','грусть','тревога','усталость','одиночество','апатия','злость']
+const AFTER_OPTS  = ['согрел','взорвал мозг','не отпускает','рассмешил','задумал','опустошил','зарядил','напугал']
+
+function MoodSearch({
+  beforeSel, afterSel, onToggleBefore, onToggleAfter, onSearch,
+}: {
+  beforeSel: string[]
+  afterSel: string[]
+  onToggleBefore: (w: string) => void
+  onToggleAfter: (w: string) => void
+  onSearch: () => void
+}) {
+  const total = beforeSel.length + afterSel.length
+  return (
+    <section style={{
+      background: T.paperSoft, border: `1px solid ${T.ink}`,
+      padding: '20px 24px', position: 'relative',
+    }}>
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 20, alignItems: 'start',
+      }}>
+        <div>
+          <div style={{
+            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
+            color: T.red, textTransform: 'uppercase', marginBottom: 5,
+          }}>⁕ основное действие</div>
+          <h1 style={{
+            fontFamily: T.display, fontSize: 24, fontWeight: 700, margin: 0,
+            letterSpacing: -0.5, lineHeight: 1.1, color: T.ink,
+          }}>
+            Найти фильм<br/>по настроению
+          </h1>
+          <p style={{ fontSize: 12, color: T.inkSoft, margin: '6px 0 0', maxWidth: 240, lineHeight: 1.5 }}>
+            Выбери, <b>с чем пришёл</b> и <b>что хочешь унести</b>.
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gap: 10, alignSelf: 'center' }}>
+          <div>
+            <div style={{
+              fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.2,
+              textTransform: 'uppercase', marginBottom: 5,
+            }}>с чем пришёл →</div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {BEFORE_OPTS.map(w => (
+                <Emo key={w} w={w} kind="before" size="sm"
+                  active={beforeSel.includes(w)}
+                  onClick={() => onToggleBefore(w)} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{
+              fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.2,
+              textTransform: 'uppercase', marginBottom: 5,
+            }}>хочу унести →</div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {AFTER_OPTS.map(w => (
+                <Emo key={w} w={w} kind="after" size="sm"
+                  active={afterSel.includes(w)}
+                  onClick={() => onToggleAfter(w)} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={onSearch}
+          style={{
+            background: T.ink, color: T.paper, border: 'none',
+            padding: '12px 18px', fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
+            alignSelf: 'stretch', minWidth: 160,
+          }}
+        >
+          {total > 0 ? `искать по ${total} эмоциям →` : 'показать всё →'}
+        </button>
+      </div>
+    </section>
+  )
+}
+
+// ── SideFilters ────────────────────────────────────────────────
+const TYPE_FILTERS = [
+  { value: 'all',    label: 'все' },
+  { value: 'movie',  label: 'фильмы' },
+  { value: 'series', label: 'сериалы' },
+  { value: 'anime',  label: 'аниме' },
+  { value: 'book',   label: 'книги' },
+]
+
+function SideFilters({
+  typeFilter, onTypeChange, total,
+}: {
+  typeFilter: string
+  onTypeChange: (t: string) => void
+  total: number
+}) {
+  return (
+    <aside style={{ paddingRight: 8 }}>
+      <div style={{ marginBottom: 22 }}>
+        <div style={{
+          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+          color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
+        }}>лента</div>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {TYPE_FILTERS.map(f => (
+            <li
+              key={f.value}
+              onClick={() => onTypeChange(f.value)}
+              style={{
+                display: 'flex', justifyContent: 'space-between',
+                padding: '5px 8px', fontSize: 13, borderRadius: 3, cursor: 'pointer',
+                color: typeFilter === f.value ? T.ink : T.inkSoft,
+                background: typeFilter === f.value ? T.paperDeep : 'transparent',
+                fontWeight: typeFilter === f.value ? 600 : 400,
+                marginBottom: 1,
+              }}
+            >
+              <span>{f.label}</span>
+              {typeFilter === f.value && (
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{total}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ marginBottom: 22 }}>
+        <div style={{
+          fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+          color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
+        }}>по эмоции</div>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {['не отпускает','взорвал мозг','согрел','опустошил','задумал'].map(em => (
+            <li key={em} style={{
+              display: 'flex', justifyContent: 'space-between',
+              padding: '5px 8px', fontSize: 13, borderRadius: 3, cursor: 'default',
+              color: T.inkSoft, marginBottom: 1,
             }}>
-              {work.type === 'movie' ? 'фильм' : work.type === 'series' ? 'сериал' : work.type === 'anime' ? 'аниме' : 'книга'}
+              <span>{em}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  )
+}
+
+// ── PostRow ────────────────────────────────────────────────────
+function PostRow({ entry, n, onClick }: { entry: Entry; n: number; onClick: () => void }) {
+  const work = entry.work
+  const author = entry.user?.firstName ?? 'Аноним'
+  const initial = author[0]?.toUpperCase() ?? '?'
+
+  return (
+    <article
+      onClick={onClick}
+      style={{
+        display: 'grid', gridTemplateColumns: '36px 1fr 150px', gap: 16,
+        padding: '18px 0', borderBottom: `1px solid ${T.ruleSoft}`,
+        cursor: 'pointer',
+      }}
+    >
+      {/* index */}
+      <div style={{ textAlign: 'right', paddingTop: 2 }}>
+        <div style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1 }}>
+          {String(n).padStart(2, '0')}
+        </div>
+      </div>
+
+      {/* content */}
+      <div>
+        {/* author + time */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+          fontSize: 12, color: T.inkSoft,
+        }}>
+          <span style={{
+            width: 22, height: 22, borderRadius: '50%', background: T.paperDeep,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 600, color: T.ink, flexShrink: 0,
+          }}>{initial}</span>
+          <b style={{ color: T.ink, fontWeight: 600 }}>{author}</b>
+          {work && (
+            <span style={{ color: T.inkMute }}>· {WORK_TYPE_LABEL[work.type] ?? work.type}</span>
+          )}
+          <span style={{
+            marginLeft: 'auto', fontFamily: T.mono, fontSize: 10,
+            letterSpacing: 0.8, color: T.inkMute,
+          }}>
+            {timeAgo(entry.createdAt)}
+          </span>
+        </div>
+
+        {/* title */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+          <h3 style={{
+            margin: 0, fontFamily: T.display, fontSize: 18, fontWeight: 700,
+            letterSpacing: -0.3, color: T.ink,
+          }}>
+            {work?.title ?? '—'}
+          </h3>
+          {work?.year && (
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1 }}>
+              {work.year}
             </span>
           )}
         </div>
 
-        {/* Пользователь + время */}
-        <p style={{ fontSize: 11, color: 'var(--text-hint)', marginBottom: 10 }}>
-          {entry.user?.firstName ?? 'Аноним'} · {timeAgo(entry.createdAt)}
-        </p>
-
-        {/* Эмоциональный контент */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--coral)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2, flexShrink: 0 }}>→</span>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
-              {entry.cameWith}
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--teal)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2, flexShrink: 0 }}>←</span>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
-              {entry.leftWith}
-            </p>
-          </div>
+        {/* emotion arc */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          <Emo w={entry.cameWith} kind="before" size="sm" />
+          <span style={{ color: T.inkMute, fontSize: 13 }}>→</span>
+          <Emo w={entry.leftWith} kind="after" size="sm" />
         </div>
 
-        {/* Атмосфера */}
+        {/* atmosphere / quote */}
         {entry.atmosphere && (
           <p style={{
-            fontSize: 11, fontStyle: 'italic', color: 'var(--text-hint)',
-            marginTop: 8, lineHeight: 1.4,
+            margin: 0, fontSize: 13, lineHeight: 1.55, color: T.ink, maxWidth: 600,
             overflow: 'hidden', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           } as React.CSSProperties}>
             {entry.atmosphere}
           </p>
         )}
+
+        {/* actions */}
+        <div style={{
+          display: 'flex', gap: 16, marginTop: 10,
+          fontSize: 12, color: T.inkSoft, fontFamily: T.sans,
+        }}>
+          <button style={actionBtn}>↩ так же чувствовал</button>
+          <button style={{ ...actionBtn, marginLeft: 'auto', color: T.inkMute }}
+            onClick={(e) => { e.stopPropagation(); onClick() }}>
+            читать полностью →
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* mini poster */}
+      <div style={{
+        width: '100%', aspectRatio: '2/3', maxHeight: 110,
+        background: T.paperDeep, border: `1px solid ${T.rule}`,
+        position: 'relative', overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        {work?.posterUrl ? (
+          <img
+            src={work.posterUrl} alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        ) : (
+          <span style={{
+            fontFamily: T.display, fontSize: 13, fontWeight: 700,
+            color: T.ink, opacity: 0.7, textAlign: 'center', lineHeight: 1,
+            padding: '0 8px', textTransform: 'uppercase',
+          }}>
+            {work?.title?.slice(0, 12) ?? '—'}
+          </span>
+        )}
+        {work?.year && (
+          <span style={{
+            position: 'absolute', top: 5, right: 5,
+            fontFamily: T.mono, fontSize: 9, color: T.inkMute, letterSpacing: 1,
+          }}>{work.year}</span>
+        )}
+      </div>
+    </article>
   )
 }
 
-function EntrySkeleton() {
+const actionBtn: React.CSSProperties = {
+  background: 'transparent', border: 'none', padding: 0,
+  fontSize: 12, color: 'inherit', cursor: 'pointer', fontFamily: 'inherit',
+}
+
+// ── Skeleton ───────────────────────────────────────────────────
+function PostSkeleton() {
   return (
     <div style={{
-      display: 'flex', gap: 14, padding: '16px',
-      borderRadius: 'var(--r-lg)',
-      background: 'var(--glass-bg)',
-      border: '1px solid var(--glass-border)',
-      marginBottom: 10,
+      display: 'grid', gridTemplateColumns: '36px 1fr 150px', gap: 16,
+      padding: '18px 0', borderBottom: `1px solid ${T.ruleSoft}`,
     }}>
-      <div style={{ width: 52, height: 78, borderRadius: 8, background: 'var(--glass-border)', flexShrink: 0 }} className="skeleton" />
-      <div style={{ flex: 1 }}>
-        <div style={{ height: 14, borderRadius: 4, background: 'var(--glass-border)', marginBottom: 8, width: '60%' }} className="skeleton" />
-        <div style={{ height: 10, borderRadius: 4, background: 'var(--glass-border)', marginBottom: 14, width: '30%' }} className="skeleton" />
-        <div style={{ height: 12, borderRadius: 4, background: 'var(--glass-border)', marginBottom: 6, width: '90%' }} className="skeleton" />
-        <div style={{ height: 12, borderRadius: 4, background: 'var(--glass-border)', width: '75%' }} className="skeleton" />
+      <div />
+      <div>
+        <div style={{ height: 14, borderRadius: 2, background: T.paperDeep, marginBottom: 10, width: '30%' }} />
+        <div style={{ height: 20, borderRadius: 2, background: T.paperDeep, marginBottom: 10, width: '55%' }} />
+        <div style={{ height: 12, borderRadius: 2, background: T.paperDeep, marginBottom: 8, width: '45%' }} />
+        <div style={{ height: 12, borderRadius: 2, background: T.paperDeep, width: '80%' }} />
       </div>
+      <div style={{ background: T.paperDeep, borderRadius: 2, height: 90 }} />
     </div>
   )
 }
 
-function ProfileBtn() {
-  const navigate = useNavigate()
-  const name = localStorage.getItem('ff_display_name') ?? 'Аноним'
-  return (
-    <button
-      onClick={() => navigate('/profile')}
-      className="hover-chip"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '5px 12px 5px 5px',
-        borderRadius: 'var(--r-pill)',
-        border: '1px solid var(--glass-border)',
-        background: 'var(--glass-bg)',
-        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-        cursor: 'pointer',
-      }}
-    >
-      <span style={{
-        width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-        background: 'linear-gradient(135deg, var(--coral) 0%, var(--teal) 100%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 11, fontWeight: 700, color: '#fff',
-      }}>
-        {name[0]?.toUpperCase() ?? '?'}
-      </span>
-      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {name}
-      </span>
-    </button>
-  )
-}
-
+// ── FeedPage ───────────────────────────────────────────────────
 export function FeedPage() {
   const [entries, setEntries] = useState<Entry[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]     = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore]     = useState(true)
+  const [page, setPage]           = useState(1)
   const [typeFilter, setTypeFilter] = useState('all')
-  const [refreshing, setRefreshing] = useState(false)
+  const [beforeSel, setBeforeSel] = useState<string[]>([])
+  const [afterSel, setAfterSel]   = useState<string[]>([])
   const navigate = useNavigate()
-
-  const touchStartY = useRef(0)
-  const [pullDistance, setPullDistance] = useState(0)
-  const PULL_THRESHOLD = 64
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   const loadEntries = useCallback(async (p: number, type: string, replace: boolean) => {
     try {
       const data = await api.entries.list(p, type) as Entry[]
-      if (replace) {
-        setEntries(data)
-      } else {
-        setEntries((prev) => [...prev, ...data])
-      }
+      if (replace) setEntries(data)
+      else setEntries(prev => [...prev, ...data])
       setHasMore(data.length === 20)
     } catch (e) {
       console.error(e)
@@ -212,160 +514,203 @@ export function FeedPage() {
     loadEntries(1, typeFilter, true).finally(() => setLoading(false))
   }, [typeFilter, loadEntries])
 
-  const sentinelRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!hasMore || loadingMore) return
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          const nextPage = page + 1
-          setPage(nextPage)
-          setLoadingMore(true)
-          loadEntries(nextPage, typeFilter, false).finally(() => setLoadingMore(false))
-        }
-      },
-      { threshold: 0.1 }
-    )
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        const next = page + 1
+        setPage(next)
+        setLoadingMore(true)
+        loadEntries(next, typeFilter, false).finally(() => setLoadingMore(false))
+      }
+    }, { threshold: 0.1 })
     if (sentinelRef.current) obs.observe(sentinelRef.current)
     return () => obs.disconnect()
   }, [hasMore, loadingMore, page, typeFilter, loadEntries])
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (window.scrollY === 0) touchStartY.current = e.touches[0].clientY
-  }
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current === 0) return
-    const delta = e.touches[0].clientY - touchStartY.current
-    if (delta > 0) setPullDistance(Math.min(delta, PULL_THRESHOLD * 1.5))
-  }
-  const handleTouchEnd = async () => {
-    if (pullDistance >= PULL_THRESHOLD && !refreshing) {
-      setRefreshing(true)
-      setPullDistance(0)
-      touchStartY.current = 0
-      await loadEntries(1, typeFilter, true)
-      setPage(1)
-      setHasMore(true)
-      setRefreshing(false)
-      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
-    } else {
-      setPullDistance(0)
-      touchStartY.current = 0
+  const toggleBefore = (w: string) =>
+    setBeforeSel(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])
+  const toggleAfter = (w: string) =>
+    setAfterSel(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])
+
+  const handleSearch = () => {
+    // navigate to search page with emotion params if selected
+    if (beforeSel.length > 0 || afterSel.length > 0) {
+      navigate('/search')
     }
   }
 
+  const handleWrite = () => navigate('/add')
+
+  // client-side mood filter on top of type filter
+  const displayed = entries.filter(e => {
+    if (beforeSel.length === 0 && afterSel.length === 0) return true
+    const cw = e.cameWith.toLowerCase()
+    const lw = e.leftWith.toLowerCase()
+    const beforeMatch = beforeSel.length === 0 || beforeSel.some(w => cw.includes(w))
+    const afterMatch  = afterSel.length === 0  || afterSel.some(w => lw.includes(w))
+    return beforeMatch && afterMatch
+  })
+
   return (
-    <div
-      className="page-enter"
-      style={{ paddingBottom: 90 }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Pull-to-refresh */}
-      <div className={`ptr-indicator${pullDistance >= PULL_THRESHOLD || refreshing ? ' ptr-active' : ''}`}
-        style={{ height: pullDistance >= PULL_THRESHOLD || refreshing ? 48 : Math.max(0, pullDistance * 0.6) }}
-      >
-        <span style={{
-          fontSize: 20, color: 'var(--coral)',
-          transform: refreshing ? 'none' : `rotate(${(pullDistance / PULL_THRESHOLD) * 180}deg)`,
-          display: 'inline-block',
-          animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
-        }}>{refreshing ? '◌' : '↓'}</span>
-      </div>
+    <div style={{
+      minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans,
+      // override parent layout background
+      margin: '-0px',
+    }}>
+      <TopBar onWrite={handleWrite} />
 
-      {/* Шапка */}
-      <div style={{
-        padding: '12px 16px',
-        background: 'var(--header-bg)',
-        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-        borderBottom: '1px solid var(--glass-border)',
-        position: 'sticky', top: 0, zIndex: 10,
+      <main style={{
+        maxWidth: 1200, margin: '0 auto', padding: '24px 32px 60px',
+        display: 'grid', gridTemplateColumns: '200px 1fr 280px', gap: 28,
+        alignItems: 'start',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--coral)' }}>
-              FeelFilm
-            </p>
-            <p style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 1 }}>
-              лента ощущений
-            </p>
+        {/* LEFT — filters */}
+        <SideFilters
+          typeFilter={typeFilter}
+          onTypeChange={(t) => setTypeFilter(t)}
+          total={entries.length}
+        />
+
+        {/* CENTER — mood search + feed */}
+        <div>
+          <MoodSearch
+            beforeSel={beforeSel}
+            afterSel={afterSel}
+            onToggleBefore={toggleBefore}
+            onToggleAfter={toggleAfter}
+            onSearch={handleSearch}
+          />
+
+          {/* feed header */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+            padding: '24px 0 10px', borderBottom: `1px solid ${T.ink}`, marginTop: 8,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+              <h2 style={{
+                margin: 0, fontFamily: T.display, fontSize: 18, fontWeight: 700,
+                letterSpacing: -0.3, color: T.ink,
+              }}>Лента</h2>
+              <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute, letterSpacing: 1 }}>
+                {entries.length} {entries.length === 1 ? 'запись' : 'записей'}
+              </span>
+            </div>
+            <span style={{ fontSize: 12, color: T.inkMute, fontFamily: T.mono }}>
+              хронология ↓
+            </span>
           </div>
-          <ProfileBtn />
-        </div>
 
-        {/* Фильтр по типу */}
-        <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 2 }}>
-          {TYPE_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setTypeFilter(f.value)}
-              className="hover-chip"
-              style={{
-                padding: '5px 12px', borderRadius: 'var(--r-pill)', flexShrink: 0,
-                fontSize: 12, fontWeight: 600,
-                background: typeFilter === f.value ? 'var(--coral)' : 'var(--glass-bg)',
-                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-                border: typeFilter === f.value ? 'none' : '1px solid var(--glass-border)',
-                color: typeFilter === f.value ? '#fff' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                boxShadow: typeFilter === f.value ? '0 2px 12px rgba(208,112,106,0.28)' : 'none',
-                transition: 'all 0.15s',
-              } as React.CSSProperties}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
+          {/* loading skeleton */}
+          {loading && (
+            <>
+              <PostSkeleton />
+              <PostSkeleton />
+              <PostSkeleton />
+            </>
+          )}
 
-      <div style={{ padding: '12px 12px 0' }}>
-        {loading && (
-          <>
-            <EntrySkeleton />
-            <EntrySkeleton />
-            <EntrySkeleton />
-          </>
-        )}
+          {/* empty state */}
+          {!loading && displayed.length === 0 && (
+            <div style={{ padding: '60px 0', textAlign: 'center' }}>
+              <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 16 }}>
+                ⁕ записей пока нет
+              </p>
+              <button
+                onClick={handleWrite}
+                style={{
+                  background: T.ink, color: T.paper, border: 'none',
+                  padding: '10px 24px', fontSize: 13, cursor: 'pointer',
+                  fontFamily: T.sans, borderRadius: 3,
+                }}
+              >
+                Написать первым →
+              </button>
+            </div>
+          )}
 
-        {!loading && entries.length === 0 && (
-          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-            <p style={{ fontSize: 36, marginBottom: 12, opacity: 0.3 }}>◈</p>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
-              Пока нет записей.<br />Будь первым.
-            </p>
-            <button onClick={() => navigate('/add')} className="hover-btn" style={{
-              padding: '12px 32px', borderRadius: 'var(--r-pill)', border: 'none',
-              background: 'var(--coral)', color: '#fff', fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', boxShadow: '0 4px 20px rgba(208,112,106,0.32)',
-            }}>
-              Написать первым
-            </button>
-          </div>
-        )}
-
-        {entries.map((entry, i) => (
-          <div key={entry.id} className="reveal-item" style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}>
-            <EntryCard
+          {/* feed */}
+          {displayed.map((entry, i) => (
+            <PostRow
+              key={entry.id}
               entry={entry}
+              n={i + 1}
               onClick={() => navigate(`/work/${entry.workId}`)}
             />
+          ))}
+
+          <div ref={sentinelRef} style={{ height: 1 }} />
+
+          {loadingMore && (
+            <>
+              <PostSkeleton />
+              <PostSkeleton />
+            </>
+          )}
+
+          {!loading && !loadingMore && !hasMore && entries.length > 0 && (
+            <div style={{ textAlign: 'center', padding: '28px 0', fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
+              ⁕ конец ленты
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT — portrait widget */}
+        <div style={{ display: 'grid', gap: 14, position: 'sticky', top: 88 }}>
+          {/* User portrait */}
+          <div style={{
+            border: `1px solid ${T.rule}`, padding: '14px 16px', background: T.paperSoft,
+          }}>
+            <div style={{
+              fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.4,
+              textTransform: 'uppercase', marginBottom: 10,
+            }}>твой портрет — лента</div>
+
+            {entries.length > 0 ? (
+              <>
+                {/* most common cameWith */}
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, color: T.inkSoft, marginBottom: 4 }}>
+                    чаще всего приходишь с
+                  </div>
+                  <Emo w={entries[0]?.cameWith?.slice(0, 20) ?? '—'} kind="before" size="sm" />
+                </div>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, color: T.inkSoft, marginBottom: 4 }}>
+                    чаще всего уносишь
+                  </div>
+                  <Emo w={entries[0]?.leftWith?.slice(0, 20) ?? '—'} kind="after" size="sm" />
+                </div>
+              </>
+            ) : (
+              <p style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.5 }}>
+                Напиши первый отзыв — и увидишь свой портрет зрителя.
+              </p>
+            )}
+
+            <button
+              onClick={handleWrite}
+              style={{
+                background: T.ink, color: T.paper, border: 'none',
+                padding: '9px 12px', fontSize: 12, fontWeight: 500,
+                cursor: 'pointer', fontFamily: T.sans, marginTop: 8,
+                borderRadius: 3, width: '100%',
+              }}
+            >
+              написать отзыв →
+            </button>
           </div>
-        ))}
 
-        <div ref={sentinelRef} style={{ height: 1 }} />
-
-        {loadingMore && (
-          <>
-            <EntrySkeleton />
-            <EntrySkeleton />
-          </>
-        )}
-
-        {!loading && !loadingMore && !hasMore && entries.length > 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--text-hint)', fontSize: 12, padding: '20px 0 12px' }}>◌</p>
-        )}
-      </div>
+          {/* Stats footer */}
+          <div style={{
+            padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
+            color: T.inkMute, letterSpacing: 1.2, textAlign: 'center',
+            borderTop: `1px dashed ${T.rule}`,
+          }}>
+            ⁕ {entries.length} записей · FeelFilm
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
