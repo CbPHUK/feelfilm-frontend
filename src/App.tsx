@@ -67,18 +67,7 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
         textTransform: 'uppercase', borderBottom: `1px solid ${T.ruleSoft}`,
       }}>
         <span className="topbar-meta-hide">{todayLabel()}</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Logo mark */}
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="14" height="14" fill="#1b1d2a"/>
-            <rect x="1" y="1" width="2" height="2" fill="#e9e2cf"/>
-            <rect x="11" y="1" width="2" height="2" fill="#e9e2cf"/>
-            <rect x="1" y="11" width="2" height="2" fill="#e9e2cf"/>
-            <rect x="11" y="11" width="2" height="2" fill="#e9e2cf"/>
-            <rect x="4" y="4" width="6" height="6" fill="#b85c3c"/>
-          </svg>
-          フィールフィルム · эмоциональный журнал кино
-        </span>
+        <span>フィールフィルム · эмоциональный журнал кино</span>
         <span className="topbar-meta-hide">ru</span>
       </div>
 
