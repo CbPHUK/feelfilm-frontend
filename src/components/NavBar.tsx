@@ -7,11 +7,11 @@ export function NavBar() {
   const { t } = useLang()
 
   const tabs = [
-    { path: '/',         icon: '▦', label: t.feed },
-    { path: '/search',   icon: '◎', label: t.search },
-    { path: '/books',    icon: '◉', label: t.books },
-    { path: '/add',      icon: '✦', label: t.share },
-    { path: '/profile',  icon: '◈', label: t.profile },
+    { path: '/',        icon: '▦', label: t.feed },
+    { path: '/library', icon: '◉', label: 'Каталог' },
+    { path: '/search',  icon: '◎', label: t.search },
+    { path: '/add',     icon: '✦', label: t.share },
+    { path: '/profile', icon: '◈', label: t.profile },
   ]
 
   return (

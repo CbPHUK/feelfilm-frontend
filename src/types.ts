@@ -1,3 +1,40 @@
+export interface Work {
+  id: number
+  title: string
+  year?: number | null
+  posterUrl?: string | null
+  description?: string | null
+  type: 'movie' | 'series' | 'anime' | 'book'
+  externalId: string
+  externalSource: 'tmdb' | 'jikan' | 'googlebooks' | 'manual'
+  _count?: { entries: number }
+}
+
+export interface WorkSearchResult {
+  id: number | null
+  title: string
+  year?: number | null
+  posterUrl?: string | null
+  description?: string | null
+  type: 'movie' | 'series' | 'anime' | 'book'
+  externalId: string
+  externalSource: string
+}
+
+export interface Entry {
+  id: number
+  userId: number
+  workId: number
+  work?: Work
+  cameWith: string
+  leftWith: string
+  atmosphere?: string | null
+  isAiGenerated: boolean
+  createdAt: string
+  updatedAt: string
+  user?: { id: number; firstName: string; username?: string | null }
+}
+
 export interface User {
   id: number
   telegramId: string

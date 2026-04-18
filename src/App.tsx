@@ -16,6 +16,8 @@ import { AddReviewPage } from './pages/AddReviewPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { BooksPage } from './pages/BooksPage'
 import { PrivacyPage } from './pages/PrivacyPage'
+import { WorkPage } from './pages/WorkPage'
+import { LibraryPage } from './pages/LibraryPage'
 import { api } from './api/client'
 
 function SidebarSettings() {
@@ -79,11 +81,11 @@ function Sidebar() {
   const { t } = useLang()
 
   const tabs = [
-    { path: '/',        icon: '▦', label: t.feed },
-    { path: '/search',  icon: '◎', label: t.search },
-    { path: '/books',   icon: '◉', label: t.books },
-    { path: '/add',     icon: '✦', label: t.share },
-    { path: '/profile', icon: '◈', label: t.profile },
+    { path: '/',         icon: '▦', label: t.feed },
+    { path: '/library',  icon: '◉', label: 'Каталог' },
+    { path: '/search',   icon: '◎', label: t.search },
+    { path: '/add',      icon: '✦', label: t.share },
+    { path: '/profile',  icon: '◈', label: t.profile },
   ]
 
   return (
@@ -269,7 +271,9 @@ function AppInner() {
                 <Route path="/"         element={<><FeedPage /><NavBar /></>} />
                 <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
                 <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
+                <Route path="/library"   element={<><LibraryPage /><NavBar /></>} />
                 <Route path="/film/:id" element={<FilmPage />} />
+                <Route path="/work/:id" element={<WorkPage />} />
                 <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
                 <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
                 <Route path="/privacy"  element={<PrivacyPage />} />

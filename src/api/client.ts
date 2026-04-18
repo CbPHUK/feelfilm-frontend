@@ -120,4 +120,23 @@ export const api = {
     get: (id: number) => request<unknown>(`/users/${id}`),
     me: () => request<unknown>('/users/me'),
   },
+
+  works: {
+    search: (q: string, type: 'all' | 'movie' | 'series' | 'anime' | 'book' = 'all') =>
+      request<unknown[]>(`/works/search?q=${encodeURIComponent(q)}&type=${type}`),
+    get: (id: number) => request<unknown>(`/works/${id}`),
+    create: (data: { title: string; type: string; externalId: string; externalSource: string; year?: number; posterUrl?: string; description?: string }) =>
+      request<unknown>('/works', { method: 'POST', body: JSON.stringify(data) }),
+  },
+
+  entries: {
+    list: (page = 1, type?: string) =>
+      request<unknown[]>(`/entries?page=${page}${type && type !== 'all' ? `&type=${type}` : ''}`),
+    mine: () => request<unknown[]>('/entries/mine'),
+    create: (data: { workId: number; cameWith: string; leftWith: string; atmosphere?: string }) =>
+      request<unknown>('/entries', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: { cameWith?: string; leftWith?: string; atmosphere?: string }) =>
+      request<unknown>(`/entries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    delete: (id: number) => request<void>(`/entries/${id}`, { method: 'DELETE' }),
+  },
 }
