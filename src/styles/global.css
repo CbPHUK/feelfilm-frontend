@@ -258,6 +258,8 @@ body::after {
   .topbar-nav { display: none !important; }
   .topbar-meta-hide { display: none !important; }
   .topbar-write-btn { display: none !important; }
+  /* на мобильном NavBar внизу — виджет не нужен */
+  .corner-controls { display: none !important; }
 }
 
 @media (min-width: 769px) {
