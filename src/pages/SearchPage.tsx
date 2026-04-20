@@ -5,16 +5,16 @@ import { MOOD_BEFORE_TAGS, EFFECT_AFTER_TAGS, ATMOSPHERE_TAGS } from '../constan
 import type { Film } from '../types'
 
 const T = {
-  paper:     '#e9e2cf',
-  paperSoft: '#efe7d2',
-  paperDeep: '#ddd3bb',
-  ink:       '#1b1d2a',
-  inkSoft:   'rgba(27,29,42,0.62)',
-  inkMute:   'rgba(27,29,42,0.45)',
-  rule:      'rgba(27,29,42,0.18)',
-  ruleSoft:  'rgba(27,29,42,0.10)',
-  red:       '#b85c3c',
-  blue:      '#2b4fc2',
+  paper:     'var(--bg)',
+  paperSoft: 'var(--glass-bg)',
+  paperDeep: 'var(--bg-deep)',
+  ink:       'var(--text)',
+  inkSoft:   'var(--text-secondary)',
+  inkMute:   'var(--text-hint)',
+  rule:      'var(--glass-border)',
+  ruleSoft:  'var(--glass-border)',
+  red:       'var(--coral)',
+  blue:      'var(--teal)',
   mono:      '"JetBrains Mono", ui-monospace, monospace',
   display:   '"Unbounded", "Inter", sans-serif',
   sans:      '"Inter", -apple-system, system-ui, sans-serif',
@@ -311,7 +311,7 @@ export function SearchPage() {
                         {(film as Film & { _count?: { reviews: number } })._count?.reviews === 0 && (
                           <div style={{
                             position: 'absolute', bottom: 0, left: 0, right: 0,
-                            background: 'rgba(27,29,42,0.75)', padding: '6px 8px',
+                            background: 'rgba(0,0,0,0.55)', padding: '6px 8px',
                           }}>
                             <span style={{ fontSize: 9, color: T.paper, fontFamily: T.mono, lineHeight: 1.3, display: 'block' }}>
                               Об этом ещё никто не написал

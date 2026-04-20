@@ -18,17 +18,18 @@ import { WorkPage } from './pages/WorkPage'
 import { LibraryPage } from './pages/LibraryPage'
 import { AdminPage } from './pages/AdminPage'
 import { useUser } from './hooks/useUser'
+import { useTheme } from './contexts/ThemeContext'
 import { api } from './api/client'
 
 // ── Design tokens (shared) ──────────────────────────────────────
 const T = {
-  paper:   '#e9e2cf',
-  ink:     '#1b1d2a',
-  inkSoft: 'rgba(27,29,42,0.62)',
-  inkMute: 'rgba(27,29,42,0.45)',
-  rule:    'rgba(27,29,42,0.18)',
-  ruleSoft:'rgba(27,29,42,0.10)',
-  red:     '#b85c3c',
+  paper:   'var(--bg)',
+  ink:     'var(--text)',
+  inkSoft: 'var(--text-secondary)',
+  inkMute: 'var(--text-hint)',
+  rule:    'var(--glass-border)',
+  ruleSoft:'var(--glass-border)',
+  red:     'var(--coral)',
   mono:    '"JetBrains Mono", ui-monospace, monospace',
   display: '"Unbounded", "Inter", sans-serif',
   sans:    '"Inter", -apple-system, system-ui, sans-serif',
@@ -51,6 +52,7 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
   const token = localStorage.getItem('ff_token')
   const { user } = useUser()
   const isAdmin = !!user?.isAdmin
+  const { theme, toggle } = useTheme()
 
   const nav = [
     { l: 'лента',    path: '/' },
@@ -129,6 +131,18 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
 
         {/* actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={toggle}
+            title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+            style={{
+              background: 'transparent', border: `1px solid ${T.rule}`,
+              width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', borderRadius: 3, fontSize: 14, color: T.inkSoft,
+              flexShrink: 0,
+            }}
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
           <button
             onClick={onWrite}
             className="topbar-write-btn"

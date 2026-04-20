@@ -18,8 +18,8 @@ export function NavBar() {
     <nav className="navbar-mobile" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
       display: 'flex',
-      background: '#e9e2cf',
-      borderTop: '1px solid #1b1d2a',
+      background: 'var(--bg)',
+      borderTop: '1px solid var(--text)',
       paddingBottom: 'env(safe-area-inset-bottom)',
       zIndex: 100,
     }}>
@@ -40,7 +40,7 @@ export function NavBar() {
           >
             <span style={{
               fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
-              color: active ? '#d64026' : 'rgba(27,29,42,0.45)',
+              color: active ? 'var(--coral)' : 'var(--text-hint)',
               fontWeight: active ? 700 : 400,
             }}>
               {tab.label}
@@ -49,7 +49,7 @@ export function NavBar() {
               <span style={{
                 position: 'absolute', top: 0, left: '50%',
                 transform: 'translateX(-50%)',
-                width: 20, height: 2, background: '#d64026',
+                width: 20, height: 2, background: 'var(--coral)',
               }} />
             )}
           </button>
