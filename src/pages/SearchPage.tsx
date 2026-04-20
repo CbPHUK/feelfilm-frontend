@@ -262,11 +262,16 @@ export function SearchPage() {
           <div>
             {results.length > 0 ? (
               <>
-                <div style={{
-                  fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
-                  color: T.inkMute, textTransform: 'uppercase', marginBottom: 20,
-                }}>
-                  найдено: {results.length}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{
+                    fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+                    color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
+                  }}>
+                    найдено: {results.length}
+                  </div>
+                  <p style={{ fontSize: 12, color: T.inkMute, margin: 0, lineHeight: 1.5 }}>
+                    Чем больше людей пишут отзывы — тем точнее становится поиск.
+                  </p>
                 </div>
                 <div style={{
                   display: 'grid',
@@ -284,6 +289,7 @@ export function SearchPage() {
                         border: `1px solid ${T.rule}`,
                         background: T.paperDeep,
                         overflow: 'hidden', marginBottom: 8,
+                        position: 'relative',
                       }}>
                         {film.posterUrl ? (
                           <img src={film.posterUrl} alt={film.title}
@@ -301,6 +307,17 @@ export function SearchPage() {
                             }}>{film.title[0]}</span>
                           </div>
                         )}
+                        {/* Нет отзывов — подсказка */}
+                        {(film as Film & { _count?: { reviews: number } })._count?.reviews === 0 && (
+                          <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            background: 'rgba(27,29,42,0.75)', padding: '6px 8px',
+                          }}>
+                            <span style={{ fontSize: 9, color: T.paper, fontFamily: T.mono, lineHeight: 1.3, display: 'block' }}>
+                              Об этом ещё никто не написал
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: T.ink, lineHeight: 1.3 }}>
                         {film.title}
@@ -313,17 +330,26 @@ export function SearchPage() {
                           </span>
                         )}
                       </div>
+                      {/* Подпись об источнике тегов */}
+                      {(film as Film & { tagSource?: string }).tagSource && (
+                        <div style={{
+                          fontSize: 9, color: T.inkMute, marginTop: 3,
+                          fontFamily: T.mono, lineHeight: 1.3,
+                        }}>
+                          {(film as Film & { tagSource?: string }).tagSource}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </>
             ) : (
               <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 16 }}>
-                  ⁕ ничего не найдено
+                <p style={{ fontFamily: T.mono, fontSize: 12, color: T.inkMute, marginBottom: 8 }}>
+                  ⁕ мало произведений точно под этот запрос
                 </p>
-                <p style={{ fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                  Попробуй убрать часть фильтров
+                <p style={{ fontSize: 13, color: T.inkSoft, lineHeight: 1.6, marginBottom: 0 }}>
+                  Попробуй убрать одну эмоцию или выбрать другую атмосферу
                 </p>
               </div>
             )}

@@ -409,8 +409,15 @@ export function FilmPage() {
             overflow: 'hidden',
           }}>
             <div style={{ padding: '16px 18px 8px' }}>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-hint)', marginBottom: 16 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-hint)', marginBottom: 6 }}>
                 {t.emotionPortrait}
+              </p>
+              <p style={{ fontSize: 10, color: 'var(--text-hint)', marginBottom: 16, opacity: 0.7 }}>
+                {reviews.length >= 3
+                  ? `Портрет собран из ${reviews.length} живых откликов`
+                  : reviews.length >= 1
+                    ? 'Первые впечатления + алгоритмическая подборка'
+                    : 'Алгоритмическая подборка — пока нет откликов'}
               </p>
               {TAG_LAYERS.map(({ key, label, color, bg }) => {
                 const tags = topTags(reviews, key)
@@ -448,9 +455,14 @@ export function FilmPage() {
       {/* ── ОТЗЫВЫ ── */}
       <div style={{ padding: '0 16px' }}>
         {reviews.length === 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--text-hint)', padding: '48px 0', fontSize: 14 }}>
-            {t.noReviews}
-          </p>
+          <div style={{ textAlign: 'center', padding: '40px 16px' }}>
+            <p style={{ color: 'var(--text-hint)', fontSize: 14, marginBottom: 8 }}>
+              {t.noReviews}
+            </p>
+            <p style={{ color: 'var(--text-hint)', fontSize: 12, opacity: 0.7, lineHeight: 1.6 }}>
+              Об этом ещё никто не написал. Будь первым — расскажи, что почувствовал.
+            </p>
+          </div>
         )}
 
         {reviews.map((review) => {

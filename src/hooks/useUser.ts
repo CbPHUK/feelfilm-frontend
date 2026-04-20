@@ -4,6 +4,8 @@ import { api } from '../api/client'
 interface AuthUser {
   id: number
   firstName: string
+  email?: string | null
+  isAdmin?: boolean
 }
 
 export function useUser() {
@@ -21,7 +23,7 @@ export function useUser() {
     api.users.me()
       .then((u) => {
         const profile = u as AuthUser
-        setUser({ id: profile.id, firstName: profile.firstName })
+        setUser({ id: profile.id, firstName: profile.firstName, email: profile.email, isAdmin: profile.isAdmin })
         setError(null)
       })
       .catch(() => {

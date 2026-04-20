@@ -170,6 +170,7 @@ export function AuthPage({ onDone, modal }: AuthPageProps) {
       const res = await api.auth.login({ email, password })
       localStorage.setItem('ff_token', res.token)
       localStorage.setItem('ff_display_name', res.user.firstName)
+      localStorage.setItem('ff_email', res.user.email ?? '')
       onDone(res.user.firstName)
     } catch (e: unknown) {
       const err = e as { needsVerification?: boolean; message?: string }
@@ -190,6 +191,7 @@ export function AuthPage({ onDone, modal }: AuthPageProps) {
       const res = await api.auth.verifyEmail({ email, code })
       localStorage.setItem('ff_token', res.token)
       localStorage.setItem('ff_display_name', res.user.firstName)
+      localStorage.setItem('ff_email', res.user.email ?? '')
       onDone(res.user.firstName)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Неверный код')

@@ -16,6 +16,8 @@ import { BooksPage } from './pages/BooksPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { WorkPage } from './pages/WorkPage'
 import { LibraryPage } from './pages/LibraryPage'
+import { AdminPage } from './pages/AdminPage'
+import { useUser } from './hooks/useUser'
 import { api } from './api/client'
 
 // ── Design tokens (shared) ──────────────────────────────────────
@@ -45,8 +47,10 @@ function todayLabel(): string {
 function TopBar({ onWrite }: { onWrite: () => void }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const name = localStorage.getItem('ff_display_name') ?? ''
+  const name  = localStorage.getItem('ff_display_name') ?? ''
   const token = localStorage.getItem('ff_token')
+  const { user } = useUser()
+  const isAdmin = !!user?.isAdmin
 
   const nav = [
     { l: 'лента',    path: '/' },
@@ -136,6 +140,19 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
           >
             + написать отзыв
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              style={{
+                background: pathname === '/admin' ? T.ink : 'transparent',
+                border: `1px solid ${T.ink}`,
+                padding: '4px 10px', fontSize: 11, fontWeight: 600,
+                color: pathname === '/admin' ? T.paper : T.ink,
+                fontFamily: T.mono, cursor: 'pointer', borderRadius: 3,
+                letterSpacing: 0.5, textTransform: 'uppercase',
+              }}
+            >admin</button>
+          )}
           {token && name && (
             <div
               onClick={() => navigate('/profile')}
@@ -240,6 +257,7 @@ function AppInner() {
               <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
               <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
               <Route path="/privacy"  element={<PrivacyPage />} />
+              <Route path="/admin"    element={<AdminPage />} />
             </Routes>
           </div>
         </div>

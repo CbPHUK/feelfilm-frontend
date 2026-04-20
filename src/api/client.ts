@@ -139,4 +139,46 @@ export const api = {
       request<unknown>(`/entries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id: number) => request<void>(`/entries/${id}`, { method: 'DELETE' }),
   },
+
+  admin: {
+    stats: () => request<{
+      totalFilms: number; totalReviews: number; totalUsers: number
+      reviewsLast7: number; reviewsLast30: number
+      usersLast7: number; usersLast30: number
+      taggedFilms: number; userTagged: number; heuristicTagged: number; adminTagged: number
+      bannedUsers: number
+      activity: { date: string; count: number }[]
+    }>('/admin/stats'),
+
+    reviews: (params?: { page?: number; userId?: number; filmId?: number; sortBy?: string }) => {
+      const qs = new URLSearchParams()
+      if (params?.page)   qs.set('page', String(params.page))
+      if (params?.userId) qs.set('userId', String(params.userId))
+      if (params?.filmId) qs.set('filmId', String(params.filmId))
+      if (params?.sortBy) qs.set('sortBy', params.sortBy)
+      return request<{ reviews: unknown[]; total: number; page: number; pages: number }>(`/admin/reviews?${qs}`)
+    },
+    deleteReview: (reviewId: number) => request<void>(`/admin/reviews/${reviewId}`, { method: 'DELETE' }),
+
+    users: (params?: { page?: number; search?: string; banned?: boolean }) => {
+      const qs = new URLSearchParams()
+      if (params?.page)   qs.set('page', String(params.page))
+      if (params?.search) qs.set('search', params.search)
+      if (params?.banned) qs.set('banned', 'true')
+      return request<{ users: unknown[]; total: number; page: number; pages: number }>(`/admin/users?${qs}`)
+    },
+    banUser:   (userId: number, reason?: string) => request<unknown>(`/admin/users/${userId}/ban`,   { method: 'POST', body: JSON.stringify({ reason }) }),
+    unbanUser: (userId: number)                  => request<unknown>(`/admin/users/${userId}/unban`, { method: 'POST', body: JSON.stringify({}) }),
+
+    films: (params?: { page?: number; search?: string; type?: string }) => {
+      const qs = new URLSearchParams()
+      if (params?.page)   qs.set('page', String(params.page))
+      if (params?.search) qs.set('search', params.search)
+      if (params?.type)   qs.set('type', params.type)
+      return request<{ films: unknown[]; total: number; page: number; pages: number }>(`/admin/films?${qs}`)
+    },
+    updateFilmTags: (filmId: number, tags: { moodBefore?: string[]; effectAfter?: string[]; atmosphere?: string[] }) =>
+      request<unknown[]>(`/admin/films/${filmId}/tags`, { method: 'PUT', body: JSON.stringify(tags) }),
+    deleteTag: (tagId: number) => request<void>(`/admin/tags/${tagId}`, { method: 'DELETE' }),
+  },
 }
