@@ -187,14 +187,20 @@ function EntryItem({ entry }: { entry: Entry & { user?: { id: number; firstName:
           padding: '4px 10px', border: `1px solid ${T.blue}44`,
           color: T.blue, fontSize: 12, borderRadius: 3,
         }}>{entry.leftWith}</span>
+        {entry.atmosphere && (
+          <span style={{
+            padding: '4px 10px', border: `1px solid ${T.ruleSoft}`,
+            color: T.inkSoft, fontSize: 12, borderRadius: 3,
+          }}>{entry.atmosphere}</span>
+        )}
       </div>
 
-      {entry.atmosphere && (
+      {entry.note && (
         <p style={{
           fontSize: 13, color: T.inkSoft, lineHeight: 1.6, margin: 0,
           fontStyle: 'italic',
         }}>
-          «{entry.atmosphere}»
+          «{entry.note}»
         </p>
       )}
     </div>

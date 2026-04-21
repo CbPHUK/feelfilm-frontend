@@ -384,19 +384,22 @@ function PostRow({ entry, n, onClick, mobile = false }: {
         </div>
 
         {/* emotion arc */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: mobile ? 0 : 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
           <Emo w={entry.cameWith} kind="before" size="sm" />
           <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
           <Emo w={entry.leftWith} kind="after" size="sm" />
+          {entry.atmosphere && (
+            <Emo w={entry.atmosphere} kind="neutral" size="sm" />
+          )}
         </div>
 
-        {/* quote — только десктоп */}
-        {!mobile && entry.atmosphere && (
+        {/* note (заметка) — только десктоп */}
+        {!mobile && (entry as Entry & { note?: string }).note && (
           <p style={{
-            margin: '8px 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
+            margin: '6px 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
             overflow: 'hidden', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          } as React.CSSProperties}>{entry.atmosphere}</p>
+          } as React.CSSProperties}>{(entry as Entry & { note?: string }).note}</p>
         )}
 
         {!mobile && (

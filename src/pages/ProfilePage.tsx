@@ -55,6 +55,11 @@ function EntryCard({ entry, onClick }: {
             </span>
           )}
         </div>
+        {entry.note && (
+          <p style={{ fontSize: 11, color: 'var(--text-hint)', margin: '4px 0 0', fontStyle: 'italic', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            «{entry.note}»
+          </p>
+        )}
       </div>
       <span style={{ fontSize: 10, color: 'var(--text-hint)', flexShrink: 0 }}>
         {new Date(entry.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}

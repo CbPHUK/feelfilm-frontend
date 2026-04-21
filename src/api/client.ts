@@ -133,9 +133,9 @@ export const api = {
     list: (page = 1, type?: string) =>
       request<unknown[]>(`/entries?page=${page}${type && type !== 'all' ? `&type=${type}` : ''}`),
     mine: () => request<unknown[]>('/entries/mine'),
-    create: (data: { workId: number; cameWith: string; leftWith: string; atmosphere?: string }) =>
+    create: (data: { workId: number; cameWith: string; leftWith: string; atmosphere?: string; note?: string }) =>
       request<unknown>('/entries', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: number, data: { cameWith?: string; leftWith?: string; atmosphere?: string }) =>
+    update: (id: number, data: { cameWith?: string; leftWith?: string; atmosphere?: string; note?: string }) =>
       request<unknown>(`/entries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id: number) => request<void>(`/entries/${id}`, { method: 'DELETE' }),
   },

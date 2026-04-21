@@ -36,6 +36,13 @@ const LEFT_WITH_OPTS = [
   'растрогал', 'вдохновил', 'умиротворил', 'восхитил',
 ]
 
+const ATMOSPHERE_OPTS = [
+  'напряжённый',  'мрачный',      'тёплый',      'красивый',
+  'странный',     'философский',  'романтичный', 'смешной',
+  'медленный',    'стремительный','жестокий',    'тихий',
+  'страшный',     'громкий',      'сказочный',   'документальный',
+]
+
 const TYPE_LABELS: Record<string, string> = {
   all: 'Всё', movie: 'Фильм', series: 'Сериал', anime: 'Аниме', book: 'Книга',
 }
@@ -88,6 +95,7 @@ export function AddReviewPage() {
   const [cameWith, setCameWith] = useState('')
   const [leftWith, setLeftWith] = useState('')
   const [atmosphere, setAtmosphere] = useState('')
+  const [note, setNote] = useState('')
   const [showNote, setShowNote] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [viewerType, setViewerType] = useState<string>(
@@ -143,7 +151,8 @@ export function AddReviewPage() {
     try {
       await api.entries.create({
         workId: selectedWork.id, cameWith, leftWith,
-        atmosphere: atmosphere.trim() || undefined,
+        atmosphere: atmosphere || undefined,
+        note: note.trim() || undefined,
       })
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
       toast('✓ Записано!', 'success')
@@ -415,6 +424,35 @@ export function AddReviewPage() {
               </div>
             </div>
 
+            {/* Атмосфера */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{
+                display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                marginBottom: 14,
+              }}>
+                <div style={{
+                  fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
+                  color: T.inkMute, textTransform: 'uppercase',
+                }}>атмосфера фильма →</div>
+                {atmosphere && (
+                  <button
+                    onClick={() => setAtmosphere('')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: T.inkMute, fontFamily: T.sans }}
+                  >сбросить ×</button>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
+                {ATMOSPHERE_OPTS.map(w => (
+                  <EmoChip
+                    key={w} label={w}
+                    active={atmosphere === w}
+                    color={T.inkSoft}
+                    onClick={() => setAtmosphere(p => p === w ? '' : w)}
+                  />
+                ))}
+              </div>
+            </div>
+
             {/* Тип зрителя */}
             <div style={{ marginBottom: 32 }}>
               <div style={{
@@ -475,8 +513,8 @@ export function AddReviewPage() {
                     color: T.inkMute, textTransform: 'uppercase', marginBottom: 8,
                   }}>заметка</div>
                   <textarea
-                    value={atmosphere}
-                    onChange={e => setAtmosphere(e.target.value)}
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
                     placeholder="Один образ, фраза, ощущение..."
                     maxLength={300}
                     rows={3}

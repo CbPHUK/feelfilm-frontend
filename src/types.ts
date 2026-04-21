@@ -29,6 +29,7 @@ export interface Entry {
   cameWith: string
   leftWith: string
   atmosphere?: string | null
+  note?: string | null
   isAiGenerated: boolean
   createdAt: string
   updatedAt: string
@@ -94,6 +95,7 @@ export interface UserProfile {
     cameWith: string
     leftWith: string
     atmosphere?: string | null
+    note?: string | null
     createdAt: string
   }>
   stats: {
