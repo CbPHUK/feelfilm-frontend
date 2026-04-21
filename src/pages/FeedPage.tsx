@@ -348,7 +348,7 @@ function PostRow({ entry, n, onClick, mobile = false }: {
       )}
 
       {/* content */}
-      <div style={{ minWidth: 0 }}>
+      <div style={{ minWidth: 0, overflow: 'hidden' }}>
         {/* author row */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6,
@@ -388,18 +388,18 @@ function PostRow({ entry, n, onClick, mobile = false }: {
           <Emo w={entry.cameWith} kind="before" size="sm" />
           <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
           <Emo w={entry.leftWith} kind="after" size="sm" />
-          {entry.atmosphere && (
+          {entry.atmosphere && entry.atmosphere.length <= 24 && (
             <Emo w={entry.atmosphere} kind="neutral" size="sm" />
           )}
         </div>
 
         {/* note (заметка) — только десктоп */}
-        {!mobile && (entry as Entry & { note?: string }).note && (
+        {!mobile && entry.note && (
           <p style={{
             margin: '6px 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
-            overflow: 'hidden', display: '-webkit-box',
-            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          } as React.CSSProperties}>{(entry as Entry & { note?: string }).note}</p>
+            overflow: 'hidden', maxHeight: '3.2em',
+            width: '100%',
+          }}>{entry.note}</p>
         )}
 
         {!mobile && (
