@@ -212,10 +212,37 @@ function CornerControls() {
   )
 }
 
+const isTelegramContext = !!window.Telegram?.WebApp?.initData
+
 type AppScreen = 'welcome' | 'auth' | 'main'
+
+// ── BackButton для Telegram ──────────────────────────────────────
+function TelegramBackButton() {
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const isRoot    = location.pathname === '/'
+
+  useEffect(() => {
+    const btn = window.Telegram?.WebApp?.BackButton
+    if (!btn) return
+
+    if (isRoot) {
+      btn.hide()
+    } else {
+      btn.show()
+      const handler = () => navigate(-1)
+      btn.onClick(handler)
+      return () => btn.offClick(handler)
+    }
+  }, [isRoot, navigate])
+
+  return null
+}
 
 function AppInner() {
   const [screen, setScreen] = useState<AppScreen>(() => {
+    // В Telegram — всегда сразу открываем приложение
+    if (isTelegramContext) return 'main'
     if (
       localStorage.getItem('ff_token') ||
       localStorage.getItem('ff_visited') ||
@@ -227,20 +254,24 @@ function AppInner() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    window.Telegram?.WebApp?.ready()
-    window.Telegram?.WebApp?.expand()
+    const tgApp = window.Telegram?.WebApp
+    if (!tgApp) return
 
-    const initData = window.Telegram?.WebApp?.initData
-    if (initData && !localStorage.getItem('ff_token')) {
-      api.auth.telegram()
-        .then((res) => {
-          localStorage.setItem('ff_token', res.token)
-          localStorage.setItem('ff_display_name', res.user.firstName)
-          localStorage.setItem('ff_visited', '1')
-          setScreen('main')
-        })
-        .catch(() => {})
-    }
+    tgApp.ready()
+    tgApp.expand()
+
+    // Авто-логин через Telegram: всегда обновляем токен из TG-контекста
+    api.auth.telegram()
+      .then((res) => {
+        localStorage.setItem('ff_token', res.token)
+        localStorage.setItem('ff_display_name', res.user.firstName)
+        localStorage.setItem('ff_visited', '1')
+        setScreen('main')
+      })
+      .catch(() => {
+        // Если уже есть токен — идём дальше, иначе показываем приложение без авторизации
+        setScreen('main')
+      })
   }, [])
 
   const handleAuthDone = (firstName: string) => {
@@ -280,6 +311,7 @@ function AppInner() {
       <>
         <ScrollToTop />
         <CornerControls />
+        {isTelegramContext && <TelegramBackButton />}
         <div className="app-layout">
           <TopBar onWrite={handleWrite} />
           <div className="app-main">
