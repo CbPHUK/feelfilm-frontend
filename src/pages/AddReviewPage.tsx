@@ -84,13 +84,17 @@ export function AddReviewPage() {
 
   const workIdParam = searchParams.get('workId') ? parseInt(searchParams.get('workId')!) : null
 
-  const [step, setStep] = useState<'search' | 'emotions'>('search')
+  const [step, setStep] = useState<'search' | 'manual' | 'emotions'>('search')
   const [selectedWork, setSelectedWork] = useState<Work | null>(null)
   const [contentType, setContentType] = useState<ContentType>('all')
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<WorkSearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [manualTitle, setManualTitle]   = useState('')
+  const [manualAuthor, setManualAuthor] = useState('')
+  const [manualYear, setManualYear]     = useState('')
+  const [manualType, setManualType]     = useState<ContentType>('book')
 
   const [cameWith, setCameWith] = useState('')
   const [leftWith, setLeftWith] = useState('')
@@ -121,6 +125,23 @@ export function AddReviewPage() {
         setSearchResults(results as WorkSearchResult[])
       } finally { setSearching(false) }
     }, 400)
+  }
+
+  const handleManualAdd = async () => {
+    if (!manualTitle.trim()) return
+    try {
+      const work = await api.works.create({
+        title: manualTitle.trim(),
+        type: manualType,
+        externalId: `manual_${Date.now()}`,
+        externalSource: 'manual',
+        year: manualYear ? parseInt(manualYear) : undefined,
+      }) as Work
+      setSelectedWork(work)
+      setStep('emotions')
+    } catch (e) {
+      console.error(e); toast('Ошибка при добавлении', 'error')
+    }
   }
 
   const handleSelectWork = async (item: WorkSearchResult) => {
@@ -277,9 +298,19 @@ export function AddReviewPage() {
             ))}
 
             {!searching && query && searchResults.length === 0 && (
-              <p style={{ textAlign: 'center', color: T.inkMute, fontFamily: T.mono, fontSize: 12, padding: '32px 0' }}>
-                ⁕ ничего не найдено
-              </p>
+              <div style={{ padding: '28px 0', textAlign: 'center' }}>
+                <p style={{ color: T.inkMute, fontFamily: T.mono, fontSize: 12, marginBottom: 16 }}>
+                  ⁕ ничего не найдено
+                </p>
+                <button
+                  onClick={() => setStep('manual')}
+                  style={{
+                    background: 'none', border: `1px dashed ${T.rule}`,
+                    color: T.inkSoft, fontSize: 13, cursor: 'pointer',
+                    padding: '10px 20px', borderRadius: 3, fontFamily: T.sans,
+                  }}
+                >+ Добавить вручную</button>
+              </div>
             )}
 
             {!query && (
@@ -290,6 +321,112 @@ export function AddReviewPage() {
                 введи название и выбери произведение
               </p>
             )}
+          </>
+        )}
+
+        {/* ── STEP manual: Добавить вручную ─────────────────── */}
+        {step === 'manual' && (
+          <>
+            <div style={{ padding: '32px 0 24px', borderBottom: `1px solid ${T.ink}`, marginBottom: 28 }}>
+              <button
+                onClick={() => setStep('search')}
+                style={{ background: 'none', border: `1px solid ${T.rule}`, color: T.inkSoft, fontSize: 13, cursor: 'pointer', padding: '4px 10px', borderRadius: 3, fontFamily: T.sans, marginBottom: 16 }}
+              >← назад</button>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5, color: T.red, textTransform: 'uppercase', marginBottom: 8 }}>⁕ добавить вручную</div>
+              <h1 style={{ fontFamily: T.display, fontSize: 28, fontWeight: 800, letterSpacing: -0.8, margin: 0, lineHeight: 1.1, color: T.ink }}>
+                Не нашли?
+              </h1>
+              <p style={{ fontSize: 13, color: T.inkSoft, marginTop: 8 }}>Заполни основные данные сам</p>
+            </div>
+
+            {/* Тип */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute, textTransform: 'uppercase', marginBottom: 10 }}>тип</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {(['book', 'movie', 'series', 'anime'] as ContentType[]).map(t => (
+                  <button key={t} onClick={() => setManualType(t)} style={{
+                    padding: '7px 14px', border: `1px solid ${manualType === t ? T.ink : T.rule}`,
+                    background: manualType === t ? T.ink : 'transparent',
+                    color: manualType === t ? T.paper : T.inkSoft,
+                    fontSize: 12, cursor: 'pointer', borderRadius: 3, fontFamily: T.sans,
+                    fontWeight: manualType === t ? 600 : 400,
+                  }}>{TYPE_LABELS[t]}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Название */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute, textTransform: 'uppercase', marginBottom: 8 }}>название *</div>
+              <input
+                type="text"
+                value={manualTitle}
+                onChange={e => setManualTitle(e.target.value)}
+                placeholder="Например: Глотнуть воздуха"
+                autoFocus
+                style={{
+                  width: '100%', padding: '12px 14px',
+                  border: `1px solid ${manualTitle ? T.ink : T.rule}`,
+                  background: T.paperSoft, color: T.ink, fontSize: 15,
+                  outline: 'none', fontFamily: T.sans, boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = T.ink)}
+                onBlur={e => (e.currentTarget.style.borderColor = manualTitle ? T.ink : T.rule)}
+              />
+            </div>
+
+            {/* Автор */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute, textTransform: 'uppercase', marginBottom: 8 }}>автор</div>
+              <input
+                type="text"
+                value={manualAuthor}
+                onChange={e => setManualAuthor(e.target.value)}
+                placeholder="Например: Джордж Оруэлл"
+                style={{
+                  width: '100%', padding: '12px 14px',
+                  border: `1px solid ${T.rule}`,
+                  background: T.paperSoft, color: T.ink, fontSize: 15,
+                  outline: 'none', fontFamily: T.sans, boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = T.ink)}
+                onBlur={e => (e.currentTarget.style.borderColor = T.rule)}
+              />
+            </div>
+
+            {/* Год */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute, textTransform: 'uppercase', marginBottom: 8 }}>год</div>
+              <input
+                type="number"
+                value={manualYear}
+                onChange={e => setManualYear(e.target.value)}
+                placeholder="Например: 1939"
+                min={1800} max={2030}
+                style={{
+                  width: 160, padding: '12px 14px',
+                  border: `1px solid ${T.rule}`,
+                  background: T.paperSoft, color: T.ink, fontSize: 15,
+                  outline: 'none', fontFamily: T.sans, boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = T.ink)}
+                onBlur={e => (e.currentTarget.style.borderColor = T.rule)}
+              />
+            </div>
+
+            <button
+              onClick={handleManualAdd}
+              disabled={!manualTitle.trim()}
+              style={{
+                width: '100%', padding: '16px',
+                border: 'none',
+                background: manualTitle.trim() ? T.ink : T.paperDeep,
+                color: manualTitle.trim() ? T.paper : T.inkMute,
+                fontSize: 14, fontWeight: 600,
+                cursor: manualTitle.trim() ? 'pointer' : 'default',
+                fontFamily: T.sans, letterSpacing: 0.3,
+              }}
+            >Продолжить →</button>
           </>
         )}
 
