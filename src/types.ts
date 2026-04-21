@@ -85,7 +85,17 @@ export interface UserProfile {
   firstName: string
   username: string | null
   reviewCount: number
+  entryCount: number
   reviews: Array<Review & { film: Pick<Film, 'id' | 'title' | 'posterUrl' | 'year' | 'type'> }>
+  entries: Array<{
+    id: number
+    workId: number
+    work: Pick<Work, 'id' | 'title' | 'posterUrl' | 'year' | 'type'>
+    cameWith: string
+    leftWith: string
+    atmosphere?: string | null
+    createdAt: string
+  }>
   stats: {
     moodBefore: { tag: string; count: number }[]
     effectAfter: { tag: string; count: number }[]

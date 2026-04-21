@@ -133,7 +133,7 @@ export function ProfilePage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>{name}</p>
             <p style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 2 }}>
-              {profile ? `${profile.reviewCount} ${t.noReviews === 'Пока нет отзывов' ? 'отзывов' : 'reviews'}` : '...'}
+              {profile ? `${(profile.entryCount ?? 0) + profile.reviewCount} записей` : '...'}
             </p>
           </div>
           <button onClick={handleRename} className="hover-text-btn" style={{
@@ -179,16 +179,16 @@ export function ProfilePage() {
           </div>
         )}
 
-        {/* История отзывов */}
+        {/* История записей */}
         <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-hint)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
-          {lang === 'ru' ? 'Мои отзывы' : 'My reviews'}
+          Мои записи
         </p>
 
         {loading && (
           <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-hint)', fontSize: 24, opacity: 0.4 }}>◌</div>
         )}
 
-        {!loading && (!profile || profile.reviewCount === 0) && (
+        {!loading && (!profile || ((profile.entryCount ?? 0) + profile.reviewCount === 0)) && (
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
             <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 16 }}>
               {t.noReviews}<br />{t.beFirst}
@@ -201,6 +201,60 @@ export function ProfilePage() {
             }}>{t.shareBtn}</button>
           </div>
         )}
+
+        {/* Entries (новая модель: Work + Entry) */}
+        {profile?.entries.map((entry) => (
+          <div
+            key={`entry-${entry.id}`}
+            onClick={() => navigate(`/work/${entry.workId}`)}
+            className="hover-card"
+            style={{
+              marginBottom: 10, padding: '14px 16px',
+              borderRadius: 'var(--r-lg)',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid var(--glass-border)',
+              boxShadow: 'var(--glass-shadow-sm)',
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              {entry.work?.posterUrl ? (
+                <img src={entry.work.posterUrl} alt="" style={{ width: 36, height: 54, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+              ) : (
+                <div style={{
+                  width: 36, height: 54, borderRadius: 6, flexShrink: 0,
+                  background: 'var(--coral-muted)', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16, color: 'var(--coral)',
+                }}>{TYPE_ICON[entry.work?.type ?? 'movie']}</div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>{entry.work?.title}</p>
+                {entry.work?.year && <p style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 2 }}>{entry.work.year}</p>}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--coral-muted)', color: 'var(--coral)', fontWeight: 500 }}>
+                {entry.cameWith}
+              </span>
+              <span style={{ fontSize: 11, padding: '2px 6px', color: 'var(--text-hint)' }}>→</span>
+              <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--teal-muted)', color: 'var(--teal)', fontWeight: 500 }}>
+                {entry.leftWith}
+              </span>
+              {entry.atmosphere && (
+                <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--r-pill)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                  {entry.atmosphere}
+                </span>
+              )}
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-hint)' }}>
+                {new Date(entry.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+              </span>
+            </div>
+          </div>
+        ))}
 
         {profile?.reviews.map((review) => (
           <div
