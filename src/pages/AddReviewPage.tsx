@@ -362,7 +362,13 @@ export function AddReviewPage() {
                 type="text"
                 value={manualTitle}
                 onChange={e => setManualTitle(e.target.value)}
-                placeholder="Например: Глотнуть воздуха"
+                placeholder={{
+                  book:   'Например: Глотнуть воздуха',
+                  movie:  'Например: Ла-Ла Ленд',
+                  series: 'Например: Во все тяжкие',
+                  anime:  'Например: Унесённые призраками',
+                  all:    'Название...',
+                }[manualType]}
                 autoFocus
                 style={{
                   width: '100%', padding: '12px 14px',
@@ -375,24 +381,26 @@ export function AddReviewPage() {
               />
             </div>
 
-            {/* Автор */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute, textTransform: 'uppercase', marginBottom: 8 }}>автор</div>
-              <input
-                type="text"
-                value={manualAuthor}
-                onChange={e => setManualAuthor(e.target.value)}
-                placeholder="Например: Джордж Оруэлл"
-                style={{
-                  width: '100%', padding: '12px 14px',
-                  border: `1px solid ${T.rule}`,
-                  background: T.paperSoft, color: T.ink, fontSize: 15,
-                  outline: 'none', fontFamily: T.sans, boxSizing: 'border-box',
-                }}
-                onFocus={e => (e.currentTarget.style.borderColor = T.ink)}
-                onBlur={e => (e.currentTarget.style.borderColor = T.rule)}
-              />
-            </div>
+            {/* Автор — только для книг */}
+            {manualType === 'book' && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4, color: T.inkMute, textTransform: 'uppercase', marginBottom: 8 }}>автор</div>
+                <input
+                  type="text"
+                  value={manualAuthor}
+                  onChange={e => setManualAuthor(e.target.value)}
+                  placeholder="Например: Джордж Оруэлл"
+                  style={{
+                    width: '100%', padding: '12px 14px',
+                    border: `1px solid ${T.rule}`,
+                    background: T.paperSoft, color: T.ink, fontSize: 15,
+                    outline: 'none', fontFamily: T.sans, boxSizing: 'border-box',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = T.ink)}
+                  onBlur={e => (e.currentTarget.style.borderColor = T.rule)}
+                />
+              </div>
+            )}
 
             {/* Год */}
             <div style={{ marginBottom: 28 }}>
@@ -401,7 +409,13 @@ export function AddReviewPage() {
                 type="number"
                 value={manualYear}
                 onChange={e => setManualYear(e.target.value)}
-                placeholder="Например: 1939"
+                placeholder={{
+                  book:   'Например: 1939',
+                  movie:  'Например: 2016',
+                  series: 'Например: 2008',
+                  anime:  'Например: 2001',
+                  all:    'Год...',
+                }[manualYear ? 'all' : manualType]}
                 min={1800} max={2030}
                 style={{
                   width: 160, padding: '12px 14px',
