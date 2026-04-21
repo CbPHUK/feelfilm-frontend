@@ -350,7 +350,7 @@ function AppInner() {
               <a href="/privacy" style={{ color: T.inkMute, textDecoration: 'underline', cursor: 'pointer' }}>
                 Политика конфиденциальности
               </a>
-              <span>Данные о фильмах: TMDB, MyAnimeList</span>
+              <span>This product uses the TMDB API · данные книг: Google Books, Open Library</span>
               <span>18+</span>
             </div>
           </div>
