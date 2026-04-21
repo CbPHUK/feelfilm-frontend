@@ -260,6 +260,10 @@ body::after {
   .topbar-write-btn { display: none !important; }
   /* на мобильном NavBar внизу — виджет не нужен */
   .corner-controls { display: none !important; }
+  /* Лого вплотную к краю */
+  .topbar-main { padding: 10px 16px !important; }
+  /* Контент не уходит под навбар */
+  .app-main { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
 }
 
 @media (min-width: 769px) {

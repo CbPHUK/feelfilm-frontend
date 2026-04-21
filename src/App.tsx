@@ -78,7 +78,7 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
       </div>
 
       {/* main nav */}
-      <div style={{
+      <div className="topbar-main" style={{
         padding: '10px 40px',
         display: 'grid', gridTemplateColumns: 'auto 1fr auto',
         alignItems: 'center', gap: 24,
