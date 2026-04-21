@@ -162,8 +162,9 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
   const entry = featured[slide.value]
   const work  = entry?.work
 
-  const titleLen = work?.title?.length ?? 0
-  const titleFs  = titleLen > 18 ? 20 : titleLen > 12 ? 26 : 32
+  // Считаем по самому длинному слову — оно не переносится
+  const longestWord = (work?.title ?? '').split(/\s+/).reduce((a, b) => a.length > b.length ? a : b, '')
+  const titleFs = longestWord.length > 10 ? 18 : longestWord.length > 7 ? 22 : longestWord.length > 5 ? 26 : 32
 
   return (
     <aside style={{ border: `1px solid ${T.ink}`, overflow: 'hidden' }}>
@@ -201,6 +202,7 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
             fontFamily: T.display, fontSize: titleFs, fontWeight: 800,
             lineHeight: 0.92, letterSpacing: -1,
             textTransform: 'uppercase',
+            wordBreak: 'break-word', overflowWrap: 'break-word',
           }}>
             {work ? work.title.replace(/\s+/g, '\n').split('\n').map((line, i) => (
               <span key={i}>{line}<br /></span>
