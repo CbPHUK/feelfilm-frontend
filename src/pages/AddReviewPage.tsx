@@ -516,8 +516,7 @@ export function AddReviewPage() {
                     value={note}
                     onChange={e => setNote(e.target.value)}
                     placeholder="Один образ, фраза, ощущение..."
-                    maxLength={300}
-                    rows={3}
+                    rows={5}
                     autoFocus
                     style={{
                       width: '100%', padding: '12px 14px',
