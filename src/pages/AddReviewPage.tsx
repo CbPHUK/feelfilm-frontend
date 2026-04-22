@@ -24,10 +24,10 @@ const T = {
 }
 
 const CAME_WITH_OPTS = [
-  'интерес',       'предвкушение',  'любопытство',   'воодушевление',
-  'спокойствие',   'ностальгия',    'радость',       'вдохновение',
-  'усталость',     'грусть',        'тревога',       'скука',
-  'пустота',       'одиночество',   'апатия',        'злость',
+  'спокойствие',   'радость',       'усталость',     'грусть',
+  'тревога',       'скука',         'пустота',       'одиночество',
+  'стресс',        'апатия',        'злость',        'ностальгия',
+  'влюблённость',
 ]
 
 const LEFT_WITH_OPTS = [
@@ -188,7 +188,7 @@ export function AddReviewPage() {
   const handleSubmit = async () => {
     if (!selectedWork) return
     if (!user) { openAuthModal(); return }
-    if (!cameWith || !leftWith) { toast('Выбери обе эмоции', 'error'); return }
+    if (!leftWith && !atmosphere) { toast('Выбери хотя бы одно поле', 'error'); return }
     setSubmitting(true)
     try {
       await api.entries.create({
@@ -204,7 +204,7 @@ export function AddReviewPage() {
     } finally { setSubmitting(false) }
   }
 
-  const canSubmit = !!cameWith && !!leftWith
+  const canSubmit = !!leftWith || !!atmosphere
 
   return (
     <div style={{
@@ -524,16 +524,16 @@ export function AddReviewPage() {
               </div>
             )}
 
-            {/* С чем пришёл */}
+            {/* В каком настроении смотрел */}
             <div style={{ marginBottom: 32 }}>
               <div style={{
                 display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-                marginBottom: 14,
+                marginBottom: 6,
               }}>
                 <div style={{
                   fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
                   color: T.red, textTransform: 'uppercase',
-                }}>с чем пришёл →</div>
+                }}>в каком настроении смотрел? →</div>
                 {cameWith && (
                   <button
                     onClick={() => setCameWith('')}
@@ -544,6 +544,10 @@ export function AddReviewPage() {
                   >сбросить ×</button>
                 )}
               </div>
+              <p style={{
+                fontSize: 12, color: T.inkMute, margin: '0 0 12px',
+                fontFamily: T.sans, lineHeight: 1.4,
+              }}>Можно пропустить, если не было особого настроения</p>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
@@ -721,7 +725,7 @@ export function AddReviewPage() {
                 transition: 'background 0.15s, color 0.15s',
               }}
             >
-              {submitting ? 'Сохраняем...' : canSubmit ? 'Поделиться опытом →' : 'Выбери обе эмоции'}
+              {submitting ? 'Сохраняем...' : canSubmit ? 'Поделиться опытом →' : 'Выбери что почувствовал или атмосферу'}
             </button>
 
             {canSubmit && (
@@ -729,7 +733,8 @@ export function AddReviewPage() {
                 marginTop: 12, textAlign: 'center',
                 fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1,
               }}>
-                {cameWith} → {leftWith}
+                {[cameWith, leftWith].filter(Boolean).join(' → ')}
+                {atmosphere && (leftWith || cameWith) ? ` · ${atmosphere}` : atmosphere}
               </div>
             )}
           </>

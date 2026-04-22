@@ -104,7 +104,7 @@ function EmotionalPortrait({ entries }: { entries: Entry[] }) {
   const atmosphereTags = topTags(entries, 'atmosphere')
 
   const sections = [
-    { label: 'шли с', tags: cameWithTags, color: T.red },
+    { label: 'смотрели в настроении', tags: cameWithTags, color: T.red },
     { label: 'ушли с', tags: leftWithTags, color: T.blue },
     { label: 'атмосфера', tags: atmosphereTags, color: T.inkSoft },
   ].filter(s => s.tags.length > 0)
@@ -178,15 +178,21 @@ function EntryItem({ entry }: { entry: Entry & { user?: { id: number; firstName:
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-        <span style={{
-          padding: '4px 10px', border: `1px solid ${T.red}44`,
-          color: T.red, fontSize: 12, borderRadius: 3,
-        }}>{entry.cameWith}</span>
-        <span style={{ color: T.inkMute, fontSize: 13 }}>→</span>
-        <span style={{
-          padding: '4px 10px', border: `1px solid ${T.blue}44`,
-          color: T.blue, fontSize: 12, borderRadius: 3,
-        }}>{entry.leftWith}</span>
+        {entry.cameWith && (
+          <>
+            <span style={{
+              padding: '4px 10px', border: `1px solid ${T.red}44`,
+              color: T.red, fontSize: 12, borderRadius: 3,
+            }}>{entry.cameWith}</span>
+            {entry.leftWith && <span style={{ color: T.inkMute, fontSize: 13 }}>→</span>}
+          </>
+        )}
+        {entry.leftWith && (
+          <span style={{
+            padding: '4px 10px', border: `1px solid ${T.blue}44`,
+            color: T.blue, fontSize: 12, borderRadius: 3,
+          }}>{entry.leftWith}</span>
+        )}
         {entry.atmosphere && (
           <span style={{
             padding: '4px 10px', border: `1px solid ${T.ruleSoft}`,

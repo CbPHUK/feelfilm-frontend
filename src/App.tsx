@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LangProvider } from './contexts/LangContext'
@@ -9,18 +9,19 @@ import { AuthPage } from './pages/AuthPage'
 import { WelcomePage } from './pages/WelcomePage'
 import { FeedPage } from './pages/FeedPage'
 import { SearchPage } from './pages/SearchPage'
-import { FilmPage } from './pages/FilmPage'
-import { AddReviewPage } from './pages/AddReviewPage'
-import { ProfilePage } from './pages/ProfilePage'
-import { BooksPage } from './pages/BooksPage'
-import { PrivacyPage } from './pages/PrivacyPage'
-import { WorkPage } from './pages/WorkPage'
-import { LibraryPage } from './pages/LibraryPage'
-import { AdminPage } from './pages/AdminPage'
 import { useUser } from './hooks/useUser'
 import { useTheme } from './contexts/ThemeContext'
 import { useLang } from './contexts/LangContext'
 import { api } from './api/client'
+
+const FilmPage      = lazy(() => import('./pages/FilmPage').then(m => ({ default: m.FilmPage })))
+const AddReviewPage = lazy(() => import('./pages/AddReviewPage').then(m => ({ default: m.AddReviewPage })))
+const ProfilePage   = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
+const BooksPage     = lazy(() => import('./pages/BooksPage').then(m => ({ default: m.BooksPage })))
+const PrivacyPage   = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
+const WorkPage      = lazy(() => import('./pages/WorkPage').then(m => ({ default: m.WorkPage })))
+const LibraryPage   = lazy(() => import('./pages/LibraryPage').then(m => ({ default: m.LibraryPage })))
+const AdminPage     = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })))
 
 // ── Design tokens (shared) ──────────────────────────────────────
 const T = {
@@ -315,18 +316,20 @@ function AppInner() {
         <div className="app-layout">
           <TopBar onWrite={handleWrite} />
           <div className="app-main">
-            <Routes>
-              <Route path="/"         element={<><FeedPage /><NavBar /></>} />
-              <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
-              <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
-              <Route path="/library"  element={<><LibraryPage /><NavBar /></>} />
-              <Route path="/film/:id" element={<FilmPage />} />
-              <Route path="/work/:id" element={<WorkPage />} />
-              <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
-              <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
-              <Route path="/privacy"  element={<PrivacyPage />} />
-              <Route path="/admin"    element={<AdminPage />} />
-            </Routes>
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/"         element={<><FeedPage /><NavBar /></>} />
+                <Route path="/search"   element={<><SearchPage /><NavBar /></>} />
+                <Route path="/books"    element={<><BooksPage /><NavBar /></>} />
+                <Route path="/library"  element={<><LibraryPage /><NavBar /></>} />
+                <Route path="/film/:id" element={<FilmPage />} />
+                <Route path="/work/:id" element={<WorkPage />} />
+                <Route path="/add"      element={<><AddReviewPage /><NavBar /></>} />
+                <Route path="/profile"  element={<><ProfilePage /><NavBar /></>} />
+                <Route path="/privacy"  element={<PrivacyPage />} />
+                <Route path="/admin"    element={<AdminPage />} />
+              </Routes>
+            </Suspense>
           </div>
         </div>
 

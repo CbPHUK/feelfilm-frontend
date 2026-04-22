@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useIsMobile } from '../hooks/useIsMobile'
@@ -321,7 +321,7 @@ const actionBtn: React.CSSProperties = {
   fontSize: 12, color: 'inherit', cursor: 'pointer', fontFamily: 'inherit',
 }
 
-function PostRow({ entry, n, onClick, mobile = false }: {
+const PostRow = memo(function PostRow({ entry, n, onClick, mobile = false }: {
   entry: Entry; n: number; onClick: () => void; mobile?: boolean
 }) {
   const work = entry.work
@@ -387,9 +387,9 @@ function PostRow({ entry, n, onClick, mobile = false }: {
 
         {/* emotion arc */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
-          <Emo w={entry.cameWith} kind="before" size="sm" />
-          <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>
-          <Emo w={entry.leftWith} kind="after" size="sm" />
+          {entry.cameWith && <Emo w={entry.cameWith} kind="before" size="sm" />}
+          {entry.cameWith && entry.leftWith && <span style={{ color: T.inkMute, fontSize: 12 }}>→</span>}
+          {entry.leftWith && <Emo w={entry.leftWith} kind="after" size="sm" />}
           {entry.atmosphere && entry.atmosphere.length <= 24 && (
             <Emo w={entry.atmosphere} kind="neutral" size="sm" />
           )}
@@ -442,7 +442,7 @@ function PostRow({ entry, n, onClick, mobile = false }: {
       </div>
     </article>
   )
-}
+})
 
 // ── Skeleton ───────────────────────────────────────────────────
 function PostSkeleton() {
@@ -520,11 +520,11 @@ export function FeedPage() {
   const toggleAfter = (w: string) =>
     setAfterSel(p => p.includes(w) ? p.filter(x => x !== w) : [...p, w])
 
-  const displayed = entries.filter(e => {
+  const displayed = useMemo(() => entries.filter(e => {
     if (!afterSel.length) return true
     const lw = e.leftWith.toLowerCase()
     return afterSel.some(w => lw.includes(w))
-  })
+  }), [entries, afterSel])
 
   const TYPE_FILTERS_MOBILE = [
     { value: 'all',    label: 'все' },
