@@ -255,8 +255,8 @@ function AppInner() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const tgApp = window.Telegram?.WebApp
-    if (!tgApp) return
+    if (!isTelegramContext) return
+    const tgApp = window.Telegram!.WebApp!
 
     tgApp.ready()
     tgApp.expand()
