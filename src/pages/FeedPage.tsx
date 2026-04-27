@@ -16,6 +16,8 @@ const T = {
   ruleSoft:  'var(--glass-border)',
   blue:      'var(--teal)',
   red:       'var(--coral)',
+  rose:      'var(--rose)',
+  sage:      'var(--sage)',
   mono:      '"JetBrains Mono", ui-monospace, monospace',
   display:   '"Unbounded", "Inter", sans-serif',
   sans:      '"Inter", -apple-system, system-ui, sans-serif',
@@ -33,10 +35,6 @@ function timeAgo(dateStr: string): string {
 
 const WORK_TYPE_LABEL: Record<string, string> = {
   movie: 'фильм', series: 'сериал', anime: 'аниме', book: 'книга',
-}
-
-const WORK_TYPE_ICON: Record<string, string> = {
-  movie: '◈', series: '▦', anime: '✦', book: '◉',
 }
 
 // ── Emo chip ───────────────────────────────────────────────────
@@ -71,73 +69,272 @@ function Emo({
   )
 }
 
-// ── SideFilters — точно по дизайну ────────────────────────────
-const TYPE_FILTERS = [
-  { value: 'all',    label: 'все' },
-  { value: 'movie',  label: 'фильмы' },
-  { value: 'series', label: 'сериалы' },
-  { value: 'anime',  label: 'аниме' },
-  { value: 'book',   label: 'книги' },
-]
+// ── Hero section (desktop only) ────────────────────────────────
+function Hero({ animeEntry, entries }: { animeEntry?: Entry; entries: Entry[] }) {
+  const navigate = useNavigate()
+  const totalByType: Record<string, number> = { movie: 0, series: 0, anime: 0, book: 0 }
+  for (const e of entries) {
+    if (e.work?.type && e.work.type in totalByType) totalByType[e.work.type]++
+  }
+  const total = entries.length
 
-const EMO_FILTERS = ['не отпускает', 'взорвал мозг', 'согрел', 'опустошил', 'задумал', 'напугал', 'зарядил']
+  const posterUrl = animeEntry?.work?.posterUrl
+  const animeTitle = animeEntry?.work?.title
 
-function SideFilters({ typeFilter, onTypeChange, afterSel, onToggleAfter, total }: {
-  typeFilter: string; onTypeChange: (t: string) => void
-  afterSel: string[]; onToggleAfter: (w: string) => void
-  total: number
-}) {
-  const sections = [
-    {
-      title: 'лента',
-      items: TYPE_FILTERS.map(f => ({
-        l: f.label, n: typeFilter === f.value ? total : undefined,
-        active: typeFilter === f.value,
-        onClick: () => onTypeChange(f.value),
-      })),
-    },
-    {
-      title: 'по эмоции',
-      items: EMO_FILTERS.map(w => ({
-        l: w, n: undefined,
-        active: afterSel.includes(w),
-        onClick: () => onToggleAfter(w),
-      })),
-    },
+  const statItems = [
+    { label: 'фильмы',   count: totalByType.movie,  color: T.red  },
+    { label: 'сериалы',  count: totalByType.series, color: T.blue },
+    { label: 'аниме',    count: totalByType.anime,  color: T.rose },
+    { label: 'книги',    count: totalByType.book,   color: T.sage },
   ]
 
   return (
-    <aside style={{ paddingTop: 4 }}>
-      {sections.map(s => (
-        <div key={s.title} style={{ marginBottom: 24 }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 320px',
+      minHeight: 260,
+      marginBottom: 36,
+      border: `1px solid ${T.ink}`,
+      overflow: 'hidden',
+    }}>
+      {/* Left: headline + stats + CTA */}
+      <div style={{
+        padding: '32px 36px',
+        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        gap: 24,
+      }}>
+        <div>
           <div style={{
-            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
-            color: T.inkMute, textTransform: 'uppercase', marginBottom: 6,
-          }}>{s.title}</div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {s.items.map(it => (
-              <li
-                key={it.l}
-                onClick={it.onClick}
-                style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '5px 8px', fontSize: 13, borderRadius: 3,
-                  cursor: 'pointer',
-                  color: it.active ? T.ink : T.inkSoft,
-                  background: it.active ? T.paperDeep : 'transparent',
-                  fontWeight: it.active ? 600 : 400, marginBottom: 1,
-                }}
-              >
-                <span>{it.l}</span>
-                {it.n !== undefined && (
-                  <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{it.n}</span>
-                )}
-              </li>
-            ))}
-          </ul>
+            fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5,
+            color: T.inkMute, textTransform: 'uppercase', marginBottom: 14,
+          }}>журнал зрителя</div>
+          <h1 style={{
+            margin: '0 0 16px', fontFamily: T.display, fontSize: 44,
+            fontWeight: 800, letterSpacing: -2, lineHeight: 0.88, color: T.ink,
+          }}>
+            FEEL<br />FILM<span style={{ color: T.red }}>.</span>
+          </h1>
+          <p style={{
+            fontSize: 13, color: T.inkSoft, lineHeight: 1.65, margin: 0, maxWidth: 320,
+          }}>
+            Записывай, с чем приходишь и что уносишь&nbsp;— пусть кино работает.
+          </p>
         </div>
-      ))}
-    </aside>
+
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          {statItems.map(s => (
+            <div key={s.label} style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '4px 10px', border: `1px solid ${T.rule}`,
+              borderRadius: 3,
+            }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.color }} />
+              <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{s.count}</span>
+              <span style={{ fontSize: 12, color: T.inkSoft }}>{s.label}</span>
+            </div>
+          ))}
+          {total > 0 && (
+            <div style={{
+              marginLeft: 4, fontFamily: T.mono, fontSize: 10,
+              color: T.inkMute, letterSpacing: 0.5,
+            }}>
+              · {total} всего
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => navigate('/add')}
+          style={{
+            alignSelf: 'flex-start',
+            background: T.ink, color: T.paper, border: 'none',
+            padding: '10px 22px', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: T.sans, borderRadius: 3,
+            letterSpacing: 0.2,
+          }}
+        >написать отзыв →</button>
+      </div>
+
+      {/* Right: anime art panel */}
+      <div style={{ position: 'relative', overflow: 'hidden', minHeight: 260 }}>
+        {/* Background gradient (pastel anime sunset) */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(160deg, var(--teal) 0%, var(--rose) 55%, var(--coral) 100%)',
+          opacity: posterUrl ? 0.3 : 1,
+        }} />
+
+        {/* CSS art silhouette when no poster */}
+        {!posterUrl && (
+          <>
+            {/* sky stripes */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(180deg, rgba(119,153,202,0.6) 0%, rgba(196,122,144,0.7) 50%, rgba(212,120,94,0.8) 100%)',
+            }} />
+            {/* sun circle */}
+            <div style={{
+              position: 'absolute', top: '22%', left: '50%', transform: 'translateX(-50%)',
+              width: 72, height: 72, borderRadius: '50%',
+              background: 'rgba(255,220,120,0.85)',
+              boxShadow: '0 0 40px 20px rgba(255,200,80,0.4)',
+            }} />
+            {/* horizon line */}
+            <div style={{
+              position: 'absolute', bottom: '38%', left: 0, right: 0,
+              height: 1, background: 'rgba(27,29,42,0.25)',
+            }} />
+            {/* silhouette — city/temple */}
+            <div style={{
+              position: 'absolute', bottom: '37%', left: '15%',
+              width: 18, height: 60, background: 'rgba(27,29,42,0.5)', borderRadius: '2px 2px 0 0',
+            }} />
+            <div style={{
+              position: 'absolute', bottom: '37%', left: '38%',
+              width: 28, height: 90, background: 'rgba(27,29,42,0.55)', borderRadius: '2px 2px 0 0',
+            }} />
+            <div style={{
+              position: 'absolute', bottom: '37%', left: '60%',
+              width: 20, height: 50, background: 'rgba(27,29,42,0.45)', borderRadius: '2px 2px 0 0',
+            }} />
+            <div style={{
+              position: 'absolute', bottom: '37%', left: '75%',
+              width: 40, height: 110, background: 'rgba(27,29,42,0.5)', borderRadius: '2px 2px 0 0',
+            }} />
+            {/* ground */}
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: '38%',
+              background: 'rgba(27,29,42,0.45)',
+            }} />
+            {/* figure silhouette */}
+            <div style={{
+              position: 'absolute', bottom: '38%', left: '50%', transform: 'translateX(-50%)',
+              width: 24, height: 52,
+              background: 'rgba(27,29,42,0.7)',
+              borderRadius: '50% 50% 0 0 / 30% 30% 0 0',
+            }} />
+          </>
+        )}
+
+        {/* Actual poster */}
+        {posterUrl && (
+          <img
+            src={posterUrl} alt={animeTitle ?? ''}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        )}
+
+        {/* Overlay text */}
+        {animeTitle && (
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            padding: '32px 20px 20px',
+            background: 'linear-gradient(to top, rgba(27,29,42,0.75) 0%, transparent 100%)',
+          }}>
+            <div style={{
+              fontFamily: T.mono, fontSize: 9, letterSpacing: 1.5,
+              color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginBottom: 4,
+            }}>аниме · в ленте</div>
+            <div style={{
+              fontFamily: T.display, fontSize: 15, fontWeight: 700,
+              color: '#fff', lineHeight: 1.2,
+              textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+            }}>{animeTitle}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── DonutChart widget ──────────────────────────────────────────
+function DonutChart({ entries }: { entries: Entry[] }) {
+  const COLORS: Record<string, string> = {
+    movie: T.red, series: T.blue, anime: T.rose, book: T.sage,
+  }
+  const TYPES = ['movie', 'series', 'anime', 'book'] as const
+  const counts = TYPES.map(type => ({
+    type,
+    count: entries.filter(e => e.work?.type === type).length,
+    label: WORK_TYPE_LABEL[type],
+    color: COLORS[type],
+  })).filter(c => c.count > 0)
+
+  const total = counts.reduce((s, c) => s + c.count, 0)
+
+  const R = 34, r = 21, cx = 42, cy = 42
+  let cumAngle = -Math.PI / 2
+  type Seg = { type: string; count: number; label: string; color: string; d: string }
+  const segments: Seg[] = counts.map(c => {
+    const angle = (c.count / total) * 2 * Math.PI
+    const gap = total === 1 ? 0 : 0.04
+    const a0 = cumAngle + gap
+    const a1 = cumAngle + angle - gap
+    cumAngle += angle
+    const x1 = cx + R * Math.cos(a0)
+    const y1 = cy + R * Math.sin(a0)
+    const x2 = cx + R * Math.cos(a1)
+    const y2 = cy + R * Math.sin(a1)
+    const xi1 = cx + r * Math.cos(a0)
+    const yi1 = cy + r * Math.sin(a0)
+    const xi2 = cx + r * Math.cos(a1)
+    const yi2 = cy + r * Math.sin(a1)
+    const large = angle > Math.PI ? 1 : 0
+    return {
+      ...c,
+      d: `M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${r} ${r} 0 ${large} 0 ${xi1} ${yi1} Z`,
+    }
+  })
+
+  return (
+    <div style={{
+      border: `1px solid ${T.rule}`, padding: '14px 16px', background: T.paperSoft,
+    }}>
+      <div style={{
+        fontFamily: T.mono, fontSize: 10, color: T.inkMute,
+        letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 14,
+      }}>что смотришь</div>
+
+      {total === 0 ? (
+        <p style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.5, margin: 0 }}>
+          Напиши первый отзыв — и увидишь свой портрет зрителя.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <svg width="84" height="84" viewBox="0 0 84 84" style={{ flexShrink: 0 }}>
+            {segments.map(s => (
+              <path key={s.type} d={s.d} fill={s.color} />
+            ))}
+            {/* inner hole */}
+            <circle cx={cx} cy={cy} r={r - 1} fill="var(--glass-bg)" />
+            {/* total number */}
+            <text
+              x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+              style={{
+                fontSize: 13, fontWeight: 800,
+                fill: 'var(--text)', fontFamily: '"Unbounded","Inter",sans-serif',
+              }}
+            >{total}</text>
+          </svg>
+
+          <div style={{ flex: 1 }}>
+            {counts.map(c => (
+              <div key={c.type} style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+              }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: c.color, flexShrink: 0,
+                }} />
+                <span style={{ fontSize: 12, color: T.ink, flex: 1 }}>{c.label}</span>
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{c.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -162,7 +359,6 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
   const entry = featured[slide.value]
   const work  = entry?.work
 
-  // Считаем по самому длинному слову — оно не переносится
   const longestWord = (work?.title ?? '').split(/\s+/).reduce((a, b) => a.length > b.length ? a : b, '')
   const titleFs = longestWord.length > 10 ? 18 : longestWord.length > 7 ? 22 : longestWord.length > 5 ? 26 : 32
 
@@ -212,7 +408,7 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
           </div>
         </div>
 
-        {/* dots — зафиксированы внизу постера */}
+        {/* dots */}
         <div style={{
           position: 'absolute', bottom: 14, left: 18,
           display: 'flex', gap: 6,
@@ -259,59 +455,6 @@ function DayWidget({ featured }: { featured: Record<string, Entry> }) {
         )}
       </div>
     </aside>
-  )
-}
-
-// ── PortraitWidget ─────────────────────────────────────────────
-function PortraitWidget({ entries }: { entries: Entry[] }) {
-  const navigate = useNavigate()
-  return (
-    <div style={{
-      border: `1px solid ${T.rule}`, padding: '14px 16px', background: T.paperSoft,
-    }}>
-      <div style={{
-        fontFamily: T.mono, fontSize: 10, color: T.inkMute, letterSpacing: 1.4,
-        textTransform: 'uppercase', marginBottom: 12,
-      }}>твой портрет — месяц</div>
-
-      {entries.length > 0 ? (
-        <>
-          {[
-            { label: `приходишь — ${entries[0]?.cameWith?.slice(0, 12) ?? 'усталым'}`, v: 62, c: T.red },
-            { label: `уносишь — ${entries[0]?.leftWith?.slice(0, 14) ?? 'задумчивость'}`,  v: 48, c: T.blue },
-            { label: 'любишь — медленное', v: 71, c: T.ink },
-          ].map(r => (
-            <div key={r.label} style={{ marginBottom: 10 }}>
-              <div style={{
-                display: 'flex', justifyContent: 'space-between',
-                fontSize: 12, color: T.ink, marginBottom: 4,
-              }}>
-                <span>{r.label}</span>
-                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>{r.v}%</span>
-              </div>
-              <div style={{ height: 3, background: T.ruleSoft, position: 'relative' }}>
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0,
-                  width: `${r.v}%`, background: r.c,
-                }} />
-              </div>
-            </div>
-          ))}
-          <button
-            onClick={() => navigate('/profile')}
-            style={{
-              background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-              fontSize: 12, color: T.inkSoft, fontFamily: T.sans,
-              borderBottom: `1px dashed ${T.rule}`, paddingBottom: 1, marginTop: 4,
-            }}
-          >весь портрет →</button>
-        </>
-      ) : (
-        <p style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.5, margin: 0 }}>
-          Напиши первый отзыв — и увидишь свой портрет зрителя.
-        </p>
-      )}
-    </div>
   )
 }
 
@@ -395,7 +538,7 @@ const PostRow = memo(function PostRow({ entry, n, onClick, mobile = false }: {
           )}
         </div>
 
-        {/* note (заметка) — только десктоп */}
+        {/* note — только десктоп */}
         {!mobile && entry.note && (
           <p style={{
             margin: '6px 0 10px', fontSize: 14, lineHeight: 1.6, color: T.inkSoft,
@@ -463,6 +606,15 @@ function PostSkeleton() {
   )
 }
 
+// ── Type filter pills (inline, shared desktop+mobile) ─────────
+const TYPE_FILTERS = [
+  { value: 'all',    label: 'все' },
+  { value: 'movie',  label: 'фильмы' },
+  { value: 'series', label: 'сериалы' },
+  { value: 'anime',  label: 'аниме' },
+  { value: 'book',   label: 'книги' },
+]
+
 // ── FeedPage ───────────────────────────────────────────────────
 export function FeedPage() {
   const [entries, setEntries]         = useState<Entry[]>([])
@@ -471,7 +623,6 @@ export function FeedPage() {
   const [hasMore, setHasMore]         = useState(true)
   const [page, setPage]               = useState(1)
   const [typeFilter, setTypeFilter]   = useState('all')
-  const [afterSel, setAfterSel]       = useState<string[]>([])
   const [featuredByType, setFeaturedByType] = useState<Record<string, Entry>>({})
   const navigate    = useNavigate()
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -517,90 +668,88 @@ export function FeedPage() {
     return () => obs.disconnect()
   }, [hasMore, loadingMore, page, typeFilter, loadEntries])
 
-  const toggleAfter = (w: string) =>
-    setAfterSel(p => p.includes(w) ? p.filter(x => x !== w) : [...p, w])
-
-  const displayed = useMemo(() => entries.filter(e => {
-    if (!afterSel.length) return true
-    const lw = e.leftWith.toLowerCase()
-    return afterSel.some(w => lw.includes(w))
-  }), [entries, afterSel])
-
-  const TYPE_FILTERS_MOBILE = [
-    { value: 'all',    label: 'все' },
-    { value: 'movie',  label: 'фильмы' },
-    { value: 'series', label: 'сериалы' },
-    { value: 'anime',  label: 'аниме' },
-    { value: 'book',   label: 'книги' },
-  ]
+  const displayed = useMemo(() => entries, [entries])
 
   return (
     <div style={{ minHeight: '100vh', background: T.paper, color: T.ink, fontFamily: T.sans }}>
 
-      {/* Горизонтальная полоса фильтров — только мобиле */}
-      {isMobile && (
-        <div className="mobile-type-strip">
-          {TYPE_FILTERS_MOBILE.map(f => (
-            <button
-              key={f.value}
-              onClick={() => setTypeFilter(f.value)}
-              style={{
-                padding: '7px 16px', whiteSpace: 'nowrap', flexShrink: 0,
-                border: `1px solid ${typeFilter === f.value ? T.ink : T.rule}`,
-                background: typeFilter === f.value ? T.ink : 'transparent',
-                color: typeFilter === f.value ? T.paper : T.inkSoft,
-                fontSize: 13, fontWeight: typeFilter === f.value ? 600 : 400,
-                cursor: 'pointer', borderRadius: 3, fontFamily: T.sans,
-              }}
-            >{f.label}</button>
-          ))}
-        </div>
-      )}
-
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: isMobile ? '0 16px 80px' : '28px 40px 80px' }}>
 
-        {/* ── 3-колоночная сетка (десктоп) / 1 колонка (мобиле) ── */}
+        {/* ── Hero (только десктоп) ── */}
+        {!isMobile && (
+          <Hero
+            animeEntry={featuredByType['anime']}
+            entries={entries}
+          />
+        )}
+
+        {/* ── Горизонтальные фильтры (всегда — mobile strip сверху, desktop — в header ленты) ── */}
+        {isMobile && (
+          <div className="mobile-type-strip">
+            {TYPE_FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setTypeFilter(f.value)}
+                style={{
+                  padding: '7px 16px', whiteSpace: 'nowrap', flexShrink: 0,
+                  border: `1px solid ${typeFilter === f.value ? T.ink : T.rule}`,
+                  background: typeFilter === f.value ? T.ink : 'transparent',
+                  color: typeFilter === f.value ? T.paper : T.inkSoft,
+                  fontSize: 13, fontWeight: typeFilter === f.value ? 600 : 400,
+                  cursor: 'pointer', borderRadius: 3, fontFamily: T.sans,
+                }}
+              >{f.label}</button>
+            ))}
+          </div>
+        )}
+
+        {/* ── 2-колоночная сетка (десктоп) / 1 колонка (мобиле) ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '200px 1fr 280px',
-          gap: isMobile ? 0 : 32,
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 300px',
+          gap: isMobile ? 0 : 36,
           alignItems: 'start',
         }}>
 
-          {/* ═══ LEFT — SideFilters (только десктоп) ═══ */}
-          {!isMobile && (
-            <div className="feed-col-left">
-              <SideFilters
-                typeFilter={typeFilter}
-                onTypeChange={setTypeFilter}
-                afterSel={afterSel}
-                onToggleAfter={toggleAfter}
-                total={entries.length}
-              />
-            </div>
-          )}
-
-          {/* ═══ CENTER — Feed ═══ */}
+          {/* ═══ LEFT — Feed ═══ */}
           <div>
             {/* feed header */}
             <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-              padding: isMobile ? '16px 0 10px' : '28px 0 12px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: isMobile ? '16px 0 10px' : '0 0 14px',
               borderBottom: `1px solid ${T.ink}`,
+              flexWrap: 'wrap', gap: 10,
             }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
                 <h2 style={{
-                  margin: 0, fontFamily: T.display, fontSize: isMobile ? 18 : 22,
+                  margin: 0, fontFamily: T.display, fontSize: isMobile ? 18 : 20,
                   fontWeight: 700, letterSpacing: -0.4, color: T.ink,
                 }}>Лента</h2>
                 <span style={{ fontFamily: T.mono, fontSize: 11, color: T.inkMute }}>
                   {entries.length} {entries.length === 1 ? 'отзыв' : 'отзывов'}
                 </span>
               </div>
+
+              {/* Type filter pills — desktop inline */}
               {!isMobile && (
-                <span style={{ fontSize: 11, color: T.inkMute, fontFamily: T.mono }}>
-                  хронология ↓
-                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {TYPE_FILTERS.map(f => (
+                    <button
+                      key={f.value}
+                      onClick={() => setTypeFilter(f.value)}
+                      style={{
+                        padding: '5px 14px',
+                        border: `1px solid ${typeFilter === f.value ? T.ink : T.rule}`,
+                        background: typeFilter === f.value ? T.ink : 'transparent',
+                        color: typeFilter === f.value ? T.paper : T.inkSoft,
+                        fontSize: 12, fontWeight: typeFilter === f.value ? 600 : 400,
+                        cursor: 'pointer', borderRadius: 3, fontFamily: T.sans,
+                        whiteSpace: 'nowrap',
+                        transition: 'background 0.12s, color 0.12s, border-color 0.12s',
+                      }}
+                    >{f.label}</button>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -642,7 +791,7 @@ export function FeedPage() {
           {!isMobile && (
             <div className="feed-col-right" style={{ display: 'grid', gap: 16, position: 'sticky', top: 80 }}>
               <DayWidget featured={featuredByType} />
-              <PortraitWidget entries={entries} />
+              <DonutChart entries={entries} />
               <div style={{
                 padding: '10px 14px', fontFamily: T.mono, fontSize: 10,
                 color: T.inkMute, letterSpacing: 1.2, textAlign: 'center',

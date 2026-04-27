@@ -609,7 +609,7 @@ export function AddReviewPage() {
                 <div style={{
                   fontFamily: T.mono, fontSize: 10, letterSpacing: 1.4,
                   color: T.inkMute, textTransform: 'uppercase',
-                }}>атмосфера фильма →</div>
+                }}>атмосфера →</div>
                 {atmosphere && (
                   <button
                     onClick={() => setAtmosphere('')}
