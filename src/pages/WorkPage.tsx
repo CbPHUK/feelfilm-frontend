@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
-import type { Work, Entry } from '../types'
+import { useAuthModal } from '../contexts/AuthModalContext'
+import type { Work, Entry, WatchlistStatus } from '../types'
 
 const T = {
   paper:     'var(--bg)',
@@ -70,6 +71,211 @@ function PosterFallback({ title, size }: { title: string; size: { w: number; h: 
         color: T.ink, opacity: 0.15, lineHeight: 1,
         textTransform: 'uppercase', userSelect: 'none',
       }}>{letter}</span>
+    </div>
+  )
+}
+
+// ── Watchlist helpers ─────────────────────────────────────────────
+
+function statusLabel(status: WatchlistStatus, type: string): string {
+  if (status === 'planned') return 'Запланировано'
+  if (status === 'in_progress') return type === 'book' ? 'Читаю' : 'Смотрю'
+  if (status === 'completed') return type === 'book' ? 'Прочитано' : 'Просмотрено'
+  return status
+}
+
+const STATUS_OPTIONS: WatchlistStatus[] = ['planned', 'in_progress', 'completed']
+
+// ── Watchlist dropdown button ─────────────────────────────────────
+
+function WatchlistButton({
+  workId,
+  workType,
+  hasExistingEntry,
+  onCompleted,
+}: {
+  workId: number
+  workType: string
+  hasExistingEntry: boolean
+  onCompleted: () => void
+}) {
+  const { openAuthModal } = useAuthModal()
+  const isLoggedIn = !!localStorage.getItem('ff_token')
+
+  const [status, setStatus] = useState<WatchlistStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isLoggedIn) { setLoading(false); return }
+    api.watchlist.getStatus(workId)
+      .then((r) => setStatus((r.status as WatchlistStatus) ?? null))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [workId, isLoggedIn])
+
+  // Закрываем дропдаун при клике вне компонента
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const handleToggle = () => {
+    if (!isLoggedIn) { openAuthModal(); return }
+    setOpen(v => !v)
+  }
+
+  const handleSelect = async (s: WatchlistStatus) => {
+    setOpen(false)
+    if (!isLoggedIn) { openAuthModal(); return }
+    setSaving(true)
+    try {
+      await api.watchlist.set(workId, s)
+      setStatus(s)
+      if (s === 'completed' && !hasExistingEntry) onCompleted()
+    } catch {}
+    finally { setSaving(false) }
+  }
+
+  const handleRemove = async () => {
+    setOpen(false)
+    setSaving(true)
+    try {
+      await api.watchlist.remove(workId)
+      setStatus(null)
+    } catch {}
+    finally { setSaving(false) }
+  }
+
+  if (loading) return null
+
+  const btnLabel = status ? statusLabel(status, workType) : '+ Добавить в планы'
+  const hasSt = !!status
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      {/* Кнопка */}
+      <div style={{
+        display: 'inline-flex', alignItems: 'stretch',
+        border: `1px solid ${hasSt ? T.ink : T.rule}`,
+        borderRadius: 3, overflow: 'hidden',
+        opacity: saving ? 0.6 : 1,
+        fontSize: 13,
+      }}>
+        <button
+          onClick={handleToggle}
+          disabled={saving}
+          style={{
+            padding: '8px 14px',
+            background: hasSt ? T.paperDeep : 'transparent',
+            border: 'none', cursor: 'pointer',
+            color: hasSt ? T.ink : T.inkSoft,
+            fontFamily: T.sans, fontSize: 13, fontWeight: hasSt ? 600 : 400,
+            lineHeight: 1,
+          }}
+        >{btnLabel}</button>
+        <button
+          onClick={handleToggle}
+          disabled={saving}
+          style={{
+            padding: '8px 10px',
+            background: hasSt ? T.paperDeep : 'transparent',
+            border: 'none',
+            borderLeft: `1px solid ${T.rule}`,
+            cursor: 'pointer', color: T.inkMute,
+            fontSize: 10, lineHeight: 1,
+          }}
+        >{open ? '▲' : '▾'}</button>
+      </div>
+
+      {/* Дропдаун */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+          minWidth: 180, zIndex: 100,
+          background: T.paperDeep,
+          border: `1px solid ${T.ink}`,
+          borderRadius: 4,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+          overflow: 'hidden',
+        }}>
+          {STATUS_OPTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => handleSelect(s)}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '10px 14px',
+                background: s === status ? `${T.ink}18` : 'transparent',
+                border: 'none', cursor: 'pointer',
+                color: s === status ? T.ink : T.inkSoft,
+                fontFamily: T.sans, fontSize: 13,
+                fontWeight: s === status ? 600 : 400,
+                borderBottom: s !== STATUS_OPTIONS[STATUS_OPTIONS.length - 1] ? `1px solid ${T.rule}22` : 'none',
+              }}
+            >
+              {s === status && <span style={{ marginRight: 6, fontSize: 10 }}>✓</span>}
+              {statusLabel(s, workType)}
+            </button>
+          ))}
+          {hasSt && (
+            <button
+              onClick={handleRemove}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '10px 14px',
+                background: 'transparent',
+                border: 'none', borderTop: `1px solid ${T.rule}`,
+                cursor: 'pointer',
+                color: T.inkMute, fontFamily: T.sans, fontSize: 12,
+              }}
+            >
+              Убрать из списка
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Nudge (подсказка после "Просмотрено") ─────────────────────────
+
+function CompletedNudge({ workId, onDismiss }: { workId: number; onDismiss: () => void }) {
+  const navigate = useNavigate()
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 8,
+      marginTop: 10,
+      padding: '7px 12px',
+      border: `1px solid ${T.ruleSoft}`,
+      borderRadius: 3,
+      background: T.paperSoft,
+      fontSize: 12, color: T.inkSoft, fontFamily: T.sans,
+    }}>
+      <span>Поделись эмоцией от этого</span>
+      <button
+        onClick={() => navigate(`/add?workId=${workId}`)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: T.red, fontSize: 12, padding: 0, fontFamily: T.sans,
+        }}
+      >→</button>
+      <button
+        onClick={onDismiss}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: T.inkMute, fontSize: 11, padding: '0 0 0 4px',
+          lineHeight: 1,
+        }}
+        title="Закрыть"
+      >×</button>
     </div>
   )
 }
@@ -220,6 +426,7 @@ export function WorkPage() {
   const [loading, setLoading] = useState(true)
   const [descExpanded, setDescExpanded] = useState(false)
   const [imgError, setImgError] = useState(false)
+  const [showNudge, setShowNudge] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -308,7 +515,7 @@ export function WorkPage() {
               margin: '0 0 12px', lineHeight: 1.05, color: T.ink,
             }}>{work.title}</h1>
             {desc && (
-              <p style={{ fontSize: 13, color: T.inkSoft, lineHeight: 1.6, margin: 0 }}>
+              <p style={{ fontSize: 13, color: T.inkSoft, lineHeight: 1.6, margin: '0 0 14px' }}>
                 {descExpanded ? desc : shortDesc}
                 {desc.length > 300 && (
                   <button
@@ -319,6 +526,19 @@ export function WorkPage() {
                   </button>
                 )}
               </p>
+            )}
+
+            {/* Watchlist button */}
+            <WatchlistButton
+              workId={work.id}
+              workType={work.type}
+              hasExistingEntry={!!work.myEntry}
+              onCompleted={() => setShowNudge(true)}
+            />
+            {showNudge && (
+              <div style={{ display: 'block', marginTop: 0 }}>
+                <CompletedNudge workId={work.id} onDismiss={() => setShowNudge(false)} />
+              </div>
             )}
           </div>
         </div>

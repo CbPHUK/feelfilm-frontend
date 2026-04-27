@@ -81,6 +81,18 @@ export interface Review {
   film?: Pick<Film, 'id' | 'title' | 'posterUrl' | 'year' | 'type'>
 }
 
+export type WatchlistStatus = 'planned' | 'in_progress' | 'completed'
+
+export interface WatchlistItem {
+  id: number
+  userId: number
+  workId: number
+  work: Work
+  status: WatchlistStatus
+  createdAt: string
+  updatedAt: string
+}
+
 export interface UserProfile {
   id: number
   firstName: string

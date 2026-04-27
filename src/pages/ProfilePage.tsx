@@ -4,7 +4,7 @@ import { api } from '../api/client'
 import { useLang } from '../contexts/LangContext'
 import { useToast } from '../contexts/ToastContext'
 import { VIEWER_TYPE_SYMBOL } from '../constants/viewerTypes'
-import type { UserProfile } from '../types'
+import type { UserProfile, WatchlistItem, WatchlistStatus } from '../types'
 
 const TYPE_ICON: Record<string, string> = { movie: '◈', series: '▦', anime: '✦', book: '◉' }
 const TYPE_LABEL: Record<string, string> = { movie: 'фильм', series: 'сериал', anime: 'аниме', book: 'книга' }
@@ -278,6 +278,234 @@ function MoodAnalysis({ profile }: { profile: UserProfile }) {
   )
 }
 
+// ── Watchlist helpers ─────────────────────────────────────────────
+
+function wStatusLabel(status: WatchlistStatus, type: string): string {
+  if (status === 'planned') return 'Запланировано'
+  if (status === 'in_progress') return type === 'book' ? 'Читаю' : 'Смотрю'
+  if (status === 'completed') return type === 'book' ? 'Прочитано' : 'Просмотрено'
+  return status
+}
+
+const W_TABS: { status: WatchlistStatus; label: string }[] = [
+  { status: 'planned',     label: 'Запланировано' },
+  { status: 'in_progress', label: 'Смотрю / Читаю' },
+  { status: 'completed',   label: 'Просмотрено / Прочитано' },
+]
+
+const EMPTY_HINTS: Record<WatchlistStatus, string> = {
+  planned:     'Здесь будут произведения, которые ты планируешь посмотреть или прочитать',
+  in_progress: 'Здесь будут произведения, которые ты сейчас смотришь или читаешь',
+  completed:   'Здесь будут произведения, которые ты уже посмотрел или прочитал',
+}
+
+// ── Карточка в списке ─────────────────────────────────────────────
+
+function WatchlistCard({
+  item,
+  onStatusChange,
+  onRemove,
+  onClick,
+}: {
+  item: WatchlistItem
+  onStatusChange: (status: WatchlistStatus) => void
+  onRemove: () => void
+  onClick: () => void
+}) {
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div
+        onClick={onClick}
+        className="hover-card"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 12px', marginBottom: 6,
+          borderRadius: 'var(--r-md)',
+          background: 'var(--glass-bg)',
+          border: '1px solid var(--glass-border)',
+          cursor: 'pointer',
+        }}
+      >
+        {item.work.posterUrl ? (
+          <img src={item.work.posterUrl} alt="" style={{ width: 28, height: 42, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} />
+        ) : (
+          <div style={{
+            width: 28, height: 42, borderRadius: 3, flexShrink: 0,
+            background: 'var(--coral-muted)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--coral)',
+          }}>{TYPE_ICON[item.work.type ?? 'movie']}</div>
+        )}
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.2,
+            overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+          }}>{item.work.title}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-hint)' }}>
+              {TYPE_ICON[item.work.type]} {TYPE_LABEL[item.work.type]}
+              {item.work.year ? ` · ${item.work.year}` : ''}
+            </span>
+          </div>
+          <div style={{ marginTop: 4 }}>
+            <span style={{
+              fontSize: 10, padding: '2px 6px', borderRadius: 3,
+              background: 'var(--glass-border)', color: 'var(--text-hint)',
+            }}>
+              {wStatusLabel(item.status, item.work.type)}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+          <span style={{ fontSize: 10, color: 'var(--text-hint)' }}>
+            {new Date(item.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 14, color: 'var(--text-hint)', padding: '1px 2px', lineHeight: 1,
+            }}
+            title="Действия"
+          >⋯</button>
+        </div>
+      </div>
+
+      {/* Мини-меню */}
+      {menuOpen && (
+        <div
+          style={{
+            position: 'absolute', right: 0, top: '100%', zIndex: 100,
+            background: 'var(--bg-deep, var(--bg))',
+            border: '1px solid var(--glass-border)',
+            borderRadius: 'var(--r-md)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+            minWidth: 160, overflow: 'hidden',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {(['planned', 'in_progress', 'completed'] as WatchlistStatus[]).filter(s => s !== item.status).map((s) => (
+            <button
+              key={s}
+              onClick={() => { setMenuOpen(false); onStatusChange(s) }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '9px 14px',
+                background: 'transparent', border: 'none',
+                cursor: 'pointer', color: 'var(--text-secondary)',
+                fontSize: 12, fontFamily: 'inherit',
+                borderBottom: '1px solid var(--glass-border)',
+              }}
+            >{wStatusLabel(s, item.work.type)}</button>
+          ))}
+          <button
+            onClick={() => { setMenuOpen(false); onRemove() }}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              padding: '9px 14px',
+              background: 'transparent', border: 'none',
+              cursor: 'pointer', color: 'var(--text-hint)',
+              fontSize: 12, fontFamily: 'inherit',
+            }}
+          >Убрать из списка</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Секция "Мои списки" ───────────────────────────────────────────
+
+function WatchlistSection() {
+  const navigate = useNavigate()
+  const [items, setItems] = useState<WatchlistItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<WatchlistStatus>('planned')
+
+  useEffect(() => {
+    api.watchlist.list()
+      .then((data) => setItems(data as WatchlistItem[]))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleStatusChange = async (item: WatchlistItem, newStatus: WatchlistStatus) => {
+    try {
+      await api.watchlist.set(item.workId, newStatus)
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i))
+    } catch {}
+  }
+
+  const handleRemove = async (item: WatchlistItem) => {
+    try {
+      await api.watchlist.remove(item.workId)
+      setItems(prev => prev.filter(i => i.id !== item.id))
+    } catch {}
+  }
+
+  const total = items.length
+  const filtered = items.filter(i => i.status === activeTab)
+
+  if (loading) return null
+  if (total === 0) return null
+
+  return (
+    <div style={{ marginTop: 18 }}>
+      <p style={{
+        fontSize: 10, fontWeight: 600, color: 'var(--text-hint)',
+        letterSpacing: '0.07em', textTransform: 'uppercase',
+        marginBottom: 10,
+      }}>
+        Мои списки · {total}
+      </p>
+
+      {/* Табы */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
+        {W_TABS.map(tab => {
+          const count = items.filter(i => i.status === tab.status).length
+          return (
+            <button
+              key={tab.status}
+              onClick={() => setActiveTab(tab.status)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: 'var(--r-sm)',
+                border: '1px solid var(--glass-border)',
+                background: activeTab === tab.status ? 'var(--glass-border)' : 'transparent',
+                color: activeTab === tab.status ? 'var(--text)' : 'var(--text-hint)',
+                fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
+                fontWeight: activeTab === tab.status ? 600 : 400,
+              }}
+            >
+              {tab.label}{count > 0 ? ` · ${count}` : ''}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Карточки */}
+      {filtered.length === 0 ? (
+        <p style={{ fontSize: 12, color: 'var(--text-hint)', padding: '10px 0', fontStyle: 'italic' }}>
+          {EMPTY_HINTS[activeTab]}
+        </p>
+      ) : (
+        filtered.map(item => (
+          <WatchlistCard
+            key={item.id}
+            item={item}
+            onClick={() => navigate(`/work/${item.workId}`)}
+            onStatusChange={(s) => handleStatusChange(item, s)}
+            onRemove={() => handleRemove(item)}
+          />
+        ))
+      )}
+    </div>
+  )
+}
+
 // ── Главная страница профиля ──────────────────────────────────────
 export function ProfilePage() {
   const { t, lang } = useLang()
@@ -410,6 +638,9 @@ export function ProfilePage() {
             ))}
           </>
         )}
+
+        {/* Мои списки (watchlist) */}
+        {profile && <WatchlistSection />}
       </div>
     </div>
   )

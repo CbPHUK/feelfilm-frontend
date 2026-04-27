@@ -140,6 +140,17 @@ export const api = {
     delete: (id: number) => request<void>(`/entries/${id}`, { method: 'DELETE' }),
   },
 
+  watchlist: {
+    getStatus: (workId: number) =>
+      request<{ status: string | null }>(`/watchlist/${workId}`),
+    list: (status?: string) =>
+      request<unknown[]>(`/watchlist${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    set: (workId: number, status: string) =>
+      request<unknown>('/watchlist', { method: 'POST', body: JSON.stringify({ workId, status }) }),
+    remove: (workId: number) =>
+      request<void>(`/watchlist/${workId}`, { method: 'DELETE' }),
+  },
+
   admin: {
     stats: () => request<{
       totalFilms: number; totalReviews: number; totalUsers: number
