@@ -135,22 +135,28 @@ function WatchlistButton({
     setOpen(false)
     if (!isLoggedIn) { openAuthModal(); return }
     setSaving(true)
+    const prev = status
+    setStatus(s) // optimistic update
     try {
       await api.watchlist.set(workId, s)
-      setStatus(s)
       if (s === 'completed' && !hasExistingEntry) onCompleted()
-    } catch {}
-    finally { setSaving(false) }
+    } catch (e) {
+      console.error('watchlist set failed:', e)
+      setStatus(prev) // rollback on error
+    } finally { setSaving(false) }
   }
 
   const handleRemove = async () => {
     setOpen(false)
     setSaving(true)
+    const prev = status
+    setStatus(null) // optimistic update
     try {
       await api.watchlist.remove(workId)
-      setStatus(null)
-    } catch {}
-    finally { setSaving(false) }
+    } catch (e) {
+      console.error('watchlist remove failed:', e)
+      setStatus(prev) // rollback on error
+    } finally { setSaving(false) }
   }
 
   if (loading) return null
