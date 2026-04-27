@@ -280,6 +280,9 @@ function MoodAnalysis({ profile }: { profile: UserProfile }) {
 
 // ── Watchlist helpers ─────────────────────────────────────────────
 
+const WORK_ICON: Record<string, string> = { movie: '🎬', series: '📺', anime: '🎌', book: '📚' }
+
+// Лейбл статуса учитывает тип контента
 function wStatusLabel(status: WatchlistStatus, type: string): string {
   if (status === 'planned') return 'Запланировано'
   if (status === 'in_progress') return type === 'book' ? 'Читаю' : 'Смотрю'
@@ -287,19 +290,30 @@ function wStatusLabel(status: WatchlistStatus, type: string): string {
   return status
 }
 
-const W_TABS: { status: WatchlistStatus; label: string }[] = [
-  { status: 'planned',     label: 'Запланировано' },
-  { status: 'in_progress', label: 'Смотрю / Читаю' },
-  { status: 'completed',   label: 'Просмотрено / Прочитано' },
-]
-
-const EMPTY_HINTS: Record<WatchlistStatus, string> = {
-  planned:     'Здесь будут произведения, которые ты планируешь посмотреть или прочитать',
-  in_progress: 'Здесь будут произведения, которые ты сейчас смотришь или читаешь',
-  completed:   'Здесь будут произведения, которые ты уже посмотрел или прочитал',
+// Динамический лейбл таба — зависит от типов произведений внутри него
+function tabLabel(status: WatchlistStatus, items: WatchlistItem[]): string {
+  if (status === 'planned') return 'Запланировано'
+  const types = new Set(items.map(i => i.work.type))
+  const hasVideo = (['movie', 'series', 'anime'] as Array<'movie' | 'series' | 'anime' | 'book'>).some(t => types.has(t))
+  const hasBook = types.has('book')
+  if (status === 'in_progress') {
+    if (hasVideo && hasBook) return 'Смотрю / Читаю'
+    return hasBook ? 'Читаю' : 'Смотрю'
+  }
+  // completed
+  if (hasVideo && hasBook) return 'Просмотрено / Прочитано'
+  return hasBook ? 'Прочитано' : 'Просмотрено'
 }
 
-// ── Карточка в списке ─────────────────────────────────────────────
+const EMPTY_HINTS: Record<WatchlistStatus, string> = {
+  planned:     'Здесь будут произведения, которые ты планируешь посмотреть или прочитать. Добавить можно с любой страницы фильма, сериала, аниме или книги.',
+  in_progress: 'Здесь окажется то, что ты сейчас смотришь или читаешь.',
+  completed:   'Здесь будет архив всего, что ты посмотрел или прочитал.',
+}
+
+const W_STATUSES: WatchlistStatus[] = ['planned', 'in_progress', 'completed']
+
+// ── Карточка-постер в сетке ───────────────────────────────────────
 
 function WatchlistCard({
   item,
@@ -313,113 +327,133 @@ function WatchlistCard({
   onClick: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const type = item.work.type
 
   return (
     <div style={{ position: 'relative' }}>
+
+      {/* Постер */}
       <div
         onClick={onClick}
-        className="hover-card"
         style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 12px', marginBottom: 6,
-          borderRadius: 'var(--r-md)',
+          position: 'relative',
+          paddingTop: '150%',   // соотношение 2:3
+          borderRadius: 'var(--r-sm)',
+          overflow: 'hidden',
           background: 'var(--glass-bg)',
           border: '1px solid var(--glass-border)',
           cursor: 'pointer',
         }}
       >
         {item.work.posterUrl ? (
-          <img src={item.work.posterUrl} alt="" style={{ width: 28, height: 42, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} />
+          <img
+            src={item.work.posterUrl}
+            alt={item.work.title}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         ) : (
           <div style={{
-            width: 28, height: 42, borderRadius: 3, flexShrink: 0,
-            background: 'var(--coral-muted)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--coral)',
-          }}>{TYPE_ICON[item.work.type ?? 'movie']}</div>
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(135deg, var(--coral-muted) 0%, var(--teal-muted) 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', opacity: 0.18, userSelect: 'none' }}>
+              {item.work.title[0]?.toUpperCase()}
+            </span>
+          </div>
         )}
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{
-            fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.2,
-            overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-          }}>{item.work.title}</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-            <span style={{ fontSize: 10, color: 'var(--text-hint)' }}>
-              {TYPE_ICON[item.work.type]} {TYPE_LABEL[item.work.type]}
-              {item.work.year ? ` · ${item.work.year}` : ''}
-            </span>
-          </div>
-          <div style={{ marginTop: 4 }}>
-            <span style={{
-              fontSize: 10, padding: '2px 6px', borderRadius: 3,
-              background: 'var(--glass-border)', color: 'var(--text-hint)',
-            }}>
-              {wStatusLabel(item.status, item.work.type)}
-            </span>
-          </div>
-        </div>
+        {/* Иконка типа — правый верхний угол */}
+        <span style={{
+          position: 'absolute', top: 5, right: 6,
+          fontSize: 13,
+          filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+          pointerEvents: 'none',
+        }}>{WORK_ICON[type]}</span>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-          <span style={{ fontSize: 10, color: 'var(--text-hint)' }}>
-            {new Date(item.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
-          </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 14, color: 'var(--text-hint)', padding: '1px 2px', lineHeight: 1,
-            }}
-            title="Действия"
-          >⋯</button>
-        </div>
+        {/* Кнопка ⋯ — правый нижний угол */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
+          style={{
+            position: 'absolute', bottom: 5, right: 5,
+            background: 'rgba(0,0,0,0.45)',
+            border: 'none', borderRadius: 3,
+            color: '#fff', fontSize: 13, lineHeight: 1,
+            padding: '2px 7px', cursor: 'pointer',
+          }}
+          title="Действия"
+        >⋯</button>
+      </div>
+
+      {/* Инфо под постером */}
+      <div onClick={onClick} style={{ padding: '6px 2px 0', cursor: 'pointer' }}>
+        <p style={{
+          fontSize: 12, fontWeight: 600, color: 'var(--text)', lineHeight: 1.3,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          margin: 0,
+        }}>{item.work.title}</p>
+        {item.work.year && (
+          <p style={{ fontSize: 10, color: 'var(--text-hint)', marginTop: 2 }}>{item.work.year}</p>
+        )}
       </div>
 
       {/* Мини-меню */}
       {menuOpen && (
-        <div
-          style={{
-            position: 'absolute', right: 0, top: '100%', zIndex: 100,
-            background: 'var(--bg-deep, var(--bg))',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 'var(--r-md)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            minWidth: 160, overflow: 'hidden',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {(['planned', 'in_progress', 'completed'] as WatchlistStatus[]).filter(s => s !== item.status).map((s) => (
+        <>
+          {/* прозрачный оверлей для закрытия */}
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 98 }}
+            onClick={() => setMenuOpen(false)}
+          />
+          <div
+            style={{
+              position: 'absolute', right: 0, top: '55%', zIndex: 99,
+              background: 'var(--bg)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: 'var(--r-md)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+              minWidth: 190, overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {W_STATUSES.filter(s => s !== item.status).map((s, i, arr) => (
+              <button
+                key={s}
+                onClick={() => { setMenuOpen(false); onStatusChange(s) }}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: '10px 14px',
+                  background: 'transparent', border: 'none',
+                  borderBottom: i < arr.length - 1 ? '1px solid var(--glass-border)' : 'none',
+                  cursor: 'pointer', color: 'var(--text-secondary)',
+                  fontSize: 12, fontFamily: 'inherit',
+                }}
+              >
+                Перенести в {wStatusLabel(s, type)}
+              </button>
+            ))}
             <button
-              key={s}
-              onClick={() => { setMenuOpen(false); onStatusChange(s) }}
+              onClick={() => { setMenuOpen(false); onRemove() }}
               style={{
                 display: 'block', width: '100%', textAlign: 'left',
-                padding: '9px 14px',
+                padding: '10px 14px',
                 background: 'transparent', border: 'none',
-                cursor: 'pointer', color: 'var(--text-secondary)',
+                borderTop: '1px solid var(--glass-border)',
+                cursor: 'pointer', color: 'var(--text-hint)',
                 fontSize: 12, fontFamily: 'inherit',
-                borderBottom: '1px solid var(--glass-border)',
               }}
-            >{wStatusLabel(s, item.work.type)}</button>
-          ))}
-          <button
-            onClick={() => { setMenuOpen(false); onRemove() }}
-            style={{
-              display: 'block', width: '100%', textAlign: 'left',
-              padding: '9px 14px',
-              background: 'transparent', border: 'none',
-              cursor: 'pointer', color: 'var(--text-hint)',
-              fontSize: 12, fontFamily: 'inherit',
-            }}
-          >Убрать из списка</button>
-        </div>
+            >Убрать из списка</button>
+          </div>
+        </>
       )}
     </div>
   )
 }
 
-// ── Секция "Мои списки" ───────────────────────────────────────────
+// ── Секция "Мой список" ───────────────────────────────────────────
 
-function WatchlistSection() {
+function WatchlistSection({ onTotalChange }: { onTotalChange: (n: number) => void }) {
   const navigate = useNavigate()
   const [items, setItems] = useState<WatchlistItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -427,80 +461,125 @@ function WatchlistSection() {
 
   useEffect(() => {
     api.watchlist.list()
-      .then((data) => setItems(data as WatchlistItem[]))
+      .then((data) => {
+        const list = data as WatchlistItem[]
+        setItems(list)
+        onTotalChange(list.length)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusChange = async (item: WatchlistItem, newStatus: WatchlistStatus) => {
+    // Оптимистично обновляем
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i))
     try {
       await api.watchlist.set(item.workId, newStatus)
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i))
-    } catch {}
+    } catch {
+      // Откатываем при ошибке
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i))
+    }
   }
 
   const handleRemove = async (item: WatchlistItem) => {
+    setItems(prev => {
+      const next = prev.filter(i => i.id !== item.id)
+      onTotalChange(next.length)
+      return next
+    })
     try {
       await api.watchlist.remove(item.workId)
-      setItems(prev => prev.filter(i => i.id !== item.id))
-    } catch {}
+    } catch {
+      setItems(prev => {
+        const restored = [...prev, item].sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )
+        onTotalChange(restored.length)
+        return restored
+      })
+    }
   }
 
-  const total = items.length
-  const filtered = items.filter(i => i.status === activeTab)
+  if (loading) return (
+    <div style={{ marginTop: 18 }}>
+      <p style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-hint)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 10 }}>
+        Мой список
+      </p>
+      <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-hint)', fontSize: 18, opacity: 0.3 }}>◌</div>
+    </div>
+  )
 
-  if (loading) return null
-  if (total === 0) return null
+  const byStatus = (s: WatchlistStatus) => items.filter(i => i.status === s)
+  const filtered = byStatus(activeTab)
+  const total = items.length
 
   return (
     <div style={{ marginTop: 18 }}>
+
+      {/* Заголовок */}
       <p style={{
         fontSize: 10, fontWeight: 600, color: 'var(--text-hint)',
         letterSpacing: '0.07em', textTransform: 'uppercase',
         marginBottom: 10,
       }}>
-        Мои списки · {total}
+        Мой список{total > 0 ? ` · ${total}` : ''}
       </p>
 
       {/* Табы */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
-        {W_TABS.map(tab => {
-          const count = items.filter(i => i.status === tab.status).length
+      <div style={{ display: 'flex', gap: 4, marginBottom: 14, flexWrap: 'wrap' }}>
+        {W_STATUSES.map(s => {
+          const tabItems = byStatus(s)
+          const count = tabItems.length
+          const label = tabLabel(s, tabItems.length > 0 ? tabItems : items) // fallback to all items for label
+          const isActive = activeTab === s
           return (
             <button
-              key={tab.status}
-              onClick={() => setActiveTab(tab.status)}
+              key={s}
+              onClick={() => setActiveTab(s)}
               style={{
-                padding: '5px 10px',
+                padding: '6px 11px',
                 borderRadius: 'var(--r-sm)',
-                border: '1px solid var(--glass-border)',
-                background: activeTab === tab.status ? 'var(--glass-border)' : 'transparent',
-                color: activeTab === tab.status ? 'var(--text)' : 'var(--text-hint)',
-                fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
-                fontWeight: activeTab === tab.status ? 600 : 400,
+                border: 'none',
+                borderBottom: isActive ? '2px solid var(--coral)' : '2px solid transparent',
+                background: 'transparent',
+                color: isActive ? 'var(--text)' : 'var(--text-hint)',
+                fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                fontWeight: isActive ? 600 : 400,
+                paddingBottom: 8,
               }}
             >
-              {tab.label}{count > 0 ? ` · ${count}` : ''}
+              {label}{count > 0 ? ` · ${count}` : ''}
             </button>
           )
         })}
       </div>
 
-      {/* Карточки */}
+      {/* Пустое состояние */}
       {filtered.length === 0 ? (
-        <p style={{ fontSize: 12, color: 'var(--text-hint)', padding: '10px 0', fontStyle: 'italic' }}>
+        <p style={{
+          fontSize: 12, color: 'var(--text-hint)', lineHeight: 1.6,
+          padding: '4px 0 16px', maxWidth: 300,
+        }}>
           {EMPTY_HINTS[activeTab]}
         </p>
       ) : (
-        filtered.map(item => (
-          <WatchlistCard
-            key={item.id}
-            item={item}
-            onClick={() => navigate(`/work/${item.workId}`)}
-            onStatusChange={(s) => handleStatusChange(item, s)}
-            onRemove={() => handleRemove(item)}
-          />
-        ))
+        /* Сетка карточек-постеров */
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+          gap: 12,
+          paddingBottom: 8,
+        }}>
+          {filtered.map(item => (
+            <WatchlistCard
+              key={item.id}
+              item={item}
+              onClick={() => navigate(`/work/${item.workId}`)}
+              onStatusChange={(s) => handleStatusChange(item, s)}
+              onRemove={() => handleRemove(item)}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -514,6 +593,7 @@ export function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [watchlistTotal, setWatchlistTotal] = useState(0)
   const name = localStorage.getItem('ff_display_name') ?? '—'
 
   useEffect(() => {
@@ -573,7 +653,9 @@ export function ProfilePage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>{name}</p>
             <p style={{ fontSize: 12, color: 'var(--text-hint)', marginTop: 2 }}>
-              {profile ? `${totalCount} записей` : '...'}
+              {profile
+                ? `${totalCount} ${totalCount === 1 ? 'запись' : totalCount < 5 ? 'записи' : 'записей'}${watchlistTotal > 0 ? ` · ${watchlistTotal} в списке` : ''}`
+                : '...'}
             </p>
           </div>
           <button onClick={handleRename} style={{
@@ -639,8 +721,8 @@ export function ProfilePage() {
           </>
         )}
 
-        {/* Мои списки (watchlist) */}
-        {profile && <WatchlistSection />}
+        {/* Мой список (watchlist) */}
+        {profile && <WatchlistSection onTotalChange={setWatchlistTotal} />}
       </div>
     </div>
   )

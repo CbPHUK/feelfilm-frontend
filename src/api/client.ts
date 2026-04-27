@@ -145,6 +145,8 @@ export const api = {
       request<{ status: string | null }>(`/watchlist/${workId}`),
     list: (status?: string) =>
       request<unknown[]>(`/watchlist${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    counts: () =>
+      request<{ planned: number; in_progress: number; completed: number; total: number }>('/watchlist/counts'),
     set: (workId: number, status: string) =>
       request<unknown>('/watchlist', { method: 'POST', body: JSON.stringify({ workId, status }) }),
     remove: (workId: number) =>
