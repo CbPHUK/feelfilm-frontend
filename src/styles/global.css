@@ -1,36 +1,35 @@
 /* ─── Светлая тема (default) ─── */
 :root,
 [data-theme="light"] {
-  /* Pastel editorial palette */
-  --bg:              #f6f0ea;
-  --bg-deep:         #ede5db;
-  --bg-outer:        #e8dfd4;
+  /* Paper/ink editorial palette — точно по дизайн-файлу */
+  --bg:              #e9e2cf;
+  --bg-deep:         #ddd3bb;
+  --bg-outer:        #d9d2bf;
 
-  --coral:           #d4785e;
-  --coral-light:     rgba(212, 120, 94, 0.14);
-  --coral-muted:     rgba(212, 120, 94, 0.08);
+  --coral:           #b85c3c;
+  --coral-light:     rgba(184, 92, 60, 0.12);
+  --coral-muted:     rgba(184, 92, 60, 0.08);
 
-  --teal:            #7799ca;
-  --teal-light:      rgba(119, 153, 202, 0.14);
-  --teal-muted:      rgba(119, 153, 202, 0.08);
+  --teal:            #2b4fc2;
+  --teal-light:      rgba(43, 79, 194, 0.12);
+  --teal-muted:      rgba(43, 79, 194, 0.08);
 
-  /* extra pastel accents */
-  --rose:            #c47a90;
-  --sage:            #5d9e7f;
+  --rose:            #c46480;
+  --sage:            #4a8c6a;
 
   --text:            #1b1d2a;
-  --text-secondary:  rgba(27,29,42,0.60);
-  --text-hint:       rgba(27,29,42,0.42);
+  --text-secondary:  rgba(27,29,42,0.62);
+  --text-hint:       rgba(27,29,42,0.45);
 
   /* Editorial borders & surfaces */
-  --glass-bg:        #f0e9e1;
-  --glass-bg-heavy:  #ede5db;
-  --glass-border:    rgba(27,29,42,0.14);
-  --glass-hi:        rgba(255,255,255,0.65);
-  --glass-shadow:    0 2px 12px rgba(27,29,42,0.09);
-  --glass-shadow-sm: 0 1px 6px rgba(27,29,42,0.06);
+  --glass-bg:        #efe7d2;
+  --glass-bg-heavy:  #e9e2cf;
+  --glass-border:    rgba(27,29,42,0.18);
+  --glass-hi:        rgba(255,255,255,0.60);
+  --glass-shadow:    0 2px 12px rgba(27,29,42,0.10);
+  --glass-shadow-sm: 0 1px 6px rgba(27,29,42,0.07);
 
-  --header-bg:       #f6f0ea;
+  --header-bg:       #e9e2cf;
 
   --r-sm:   3px;
   --r-md:   3px;
@@ -43,33 +42,33 @@
 
 /* ─── Тёмная тема ─── */
 [data-theme="dark"] {
-  --bg:              #1e1c1a;
-  --bg-deep:         #17150f;
-  --bg-outer:        #131109;
+  --bg:              #1e1c17;
+  --bg-deep:         #16140f;
+  --bg-outer:        #12110d;
 
-  --coral:           #d4836a;
-  --coral-light:     rgba(212, 131, 106, 0.15);
-  --coral-muted:     rgba(212, 131, 106, 0.10);
+  --coral:           #c4623e;
+  --coral-light:     rgba(196, 98, 62, 0.15);
+  --coral-muted:     rgba(196, 98, 62, 0.10);
 
-  --teal:            #7aabdc;
-  --teal-light:      rgba(122, 171, 220, 0.15);
-  --teal-muted:      rgba(122, 171, 220, 0.10);
+  --teal:            #4a6fd4;
+  --teal-light:      rgba(74, 111, 212, 0.15);
+  --teal-muted:      rgba(74, 111, 212, 0.10);
 
-  --rose:            #d48fa8;
-  --sage:            #6db893;
+  --rose:            #c4628a;
+  --sage:            #4a9c6a;
 
-  --text:            #ede7db;
-  --text-secondary:  rgba(237,231,219,0.64);
-  --text-hint:       rgba(237,231,219,0.40);
+  --text:            #e8e2d4;
+  --text-secondary:  rgba(232,226,212,0.65);
+  --text-hint:       rgba(232,226,212,0.40);
 
-  --glass-bg:        rgba(36,32,26,0.82);
-  --glass-bg-heavy:  rgba(26,24,18,0.96);
-  --glass-border:    rgba(237,231,219,0.13);
+  --glass-bg:        rgba(38,34,24,0.80);
+  --glass-bg-heavy:  rgba(28,26,18,0.95);
+  --glass-border:    rgba(232,226,212,0.14);
   --glass-hi:        rgba(255,255,255,0.05);
-  --glass-shadow:    0 2px 12px rgba(0,0,0,0.36);
-  --glass-shadow-sm: 0 1px 6px rgba(0,0,0,0.26);
+  --glass-shadow:    0 2px 12px rgba(0,0,0,0.35);
+  --glass-shadow-sm: 0 1px 6px rgba(0,0,0,0.25);
 
-  --header-bg:       #1e1c1a;
+  --header-bg:       #1e1c17;
 
   --r-sm:   3px;
   --r-md:   3px;

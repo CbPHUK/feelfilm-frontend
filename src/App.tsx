@@ -91,10 +91,10 @@ function TopBar({ onWrite }: { onWrite: () => void }) {
         >
           {/* логомарк — 4 кружка */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="6"  cy="6"  r="5" fill="#d4785e" />
-            <circle cx="18" cy="6"  r="5" fill="#7799ca" />
-            <circle cx="6"  cy="18" r="5" fill="#c47a90" />
-            <circle cx="18" cy="18" r="5" fill="#5d9e7f" />
+            <circle cx="6"  cy="6"  r="5" fill="#b85c3c" />
+            <circle cx="18" cy="6"  r="5" fill="#2b4fc2" />
+            <circle cx="6"  cy="18" r="5" fill="#c46480" />
+            <circle cx="18" cy="18" r="5" fill="#4a8c6a" />
           </svg>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
             <div style={{
